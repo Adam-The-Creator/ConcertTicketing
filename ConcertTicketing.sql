@@ -241,52 +241,7 @@ BEGIN
 		CONSTRAINT FK_OrderTickets_TicketID FOREIGN KEY(TicketID) REFERENCES Tickets(ID) ON DELETE CASCADE ON UPDATE CASCADE,
 		CONSTRAINT FK_OrderTickets_OrdersID FOREIGN KEY(OrdersID) REFERENCES Orders(ID) ON DELETE CASCADE ON UPDATE CASCADE
 	);
-
-	--/* CREATING TABLE FOR LOGGING */
-	--IF OBJECT_ID('Logs') IS NULL CREATE TABLE Logs(
-	--	-- ATTRIBUTES
-	--	ID BIGINT IDENTITY(1, 1),
-	--	TableName VARCHAR(256) NOT NULL,
-	--	RekordID VARCHAR(256) NOT NULL,
-	--	FieldName VARCHAR(256) NOT NULL,
-	--	OldValue VARCHAR(256),
-	--	NewValue VARCHAR(256),
-	--	ChangedAt DATETIME,
-	--	ChangedBy VARCHAR(256) NOT NULL,
-	--	Event VARCHAR(256) NOT NULL,
-	--	-- CONSTRAINTS
-	--	CONSTRAINT PK_Logs_ID PRIMARY KEY(ID),
-	--	CONSTRAINT DF_Logs_ChangedAt DEFAULT GETDATE() FOR ChangedAt,
-	--	CONSTRAINT CK_Logs_Event CHECK (Event IN ('Created', 'Updated', 'Deleted'))
-	--);
 END
-
-/* TRIGGERS */
---GO
---CREATE TRIGGER trg_Customers_Log ON Customers AFTER INSERT, UPDATE, DELETE AS BEGIN
---    SET NOCOUNT ON;
---    DECLARE @user NVARCHAR(256) = SYSTEM_USER;
-
---    -- LOG INSERT EVENTS
---    INSERT INTO Logs (TableName, RekordID, FieldName, OldValue, NewValue, ChangedBy, Event)
---    SELECT 'Customers', ID, 'AllFields', NULL, CONCAT(Name, ' | ', Email), @user, 'Created' FROM inserted
---    WHERE NOT EXISTS ( SELECT 1 FROM deleted WHERE deleted.ID = inserted.ID );
-
---    -- LOG DELETE EVENTS
---    INSERT INTO Logs (TableName, RekordID, FieldName, OldValue, NewValue, ChangedBy, Event)
---    SELECT 'Customers', ID, 'AllFields', CONCAT(Name, ' | ', Email), NULL, @user, 'Deleted' FROM deleted
---    WHERE NOT EXISTS ( SELECT 1 FROM inserted WHERE inserted.ID = deleted.ID );
-
---    -- LOG UPDATE EVENTS (Email)
---    INSERT INTO Logs (TableName, RekordID, FieldName, OldValue, NewValue, ChangedBy, Event)
---    SELECT 'Customers', i.ID, 'Email', d.Email, i.Email, @user, 'Updated' FROM inserted i
---    JOIN deleted d ON i.ID = d.ID WHERE i.Email <> d.Email;
-
---	-- LOG UPDATE EVENTS (Name)
---	INSERT INTO Logs (TableName, RekordID, FieldName, OldValue, NewValue, ChangedBy, Event)
---    SELECT 'Customers', i.ID, 'Name', d.Name, i.Name, @user, 'Updated' FROM inserted i
---    JOIN deleted d ON i.ID = d.ID WHERE ISNULL(i.Name, '') <> ISNULL(d.Name, '');
---END;
 
 /* DROP TABLES */
 /*
