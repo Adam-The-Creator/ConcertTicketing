@@ -1,3 +1,6 @@
+using ConcertTicketing.Server.Data.Context;
+using Microsoft.EntityFrameworkCore;
+
 namespace ConcertTicketing.Server
 {
     public class Program
@@ -8,6 +11,10 @@ namespace ConcertTicketing.Server
 
             // Add services to the container.
             builder.Services.AddAuthorization();
+
+            builder.Services.AddDbContext<ConcertTicketingDBContext>(
+                options => options.UseSqlServer(builder.Configuration.GetConnectionString("MainSQLServerConnection"))
+            );
 
 
             var app = builder.Build();
