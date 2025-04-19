@@ -9,23 +9,43 @@ namespace ConcertTicketing.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Add authorization services (if needed for your app)
             builder.Services.AddAuthorization();
 
-            builder.Services.AddDbContext<ConcertTicketingDBContext>(
-                options => options.UseSqlServer(builder.Configuration.GetConnectionString("MainSQLServerConnection"))
+            // Add DB context with SQL Server
+            builder.Services.AddDbContext<ConcertTicketingDBContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("MainSQLServerConnection"))
             );
 
+            // Add controllers
+            builder.Services.AddControllers();
+            
+            builder.Services.AddControllersWithViews();
+
+            // Support CORS (cross-origin requests)
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAll",
+            //        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            //});
+
+            builder.Services.AddEndpointsApiExplorer();
 
             var app = builder.Build();
 
+            // Enable CORS
+            //app.UseCors("AllowAll");
+
+            // Enable static files and default files
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
             // Configure the HTTP request pipeline.
-
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+
+            // Enable authorization
             app.UseAuthorization();
 
             var summaries = new[]
@@ -46,6 +66,10 @@ namespace ConcertTicketing.Server
                 return forecast;
             });
 
+            // Map API controllers
+            app.MapControllers();
+
+            // Fallback for SPA or index.html
             app.MapFallbackToFile("/index.html");
 
             app.Run();
