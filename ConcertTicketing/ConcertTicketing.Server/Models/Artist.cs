@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("Name", Name = "UQ_Artists_Name", IsUnique = true)]
+[Index("ArtistName", Name = "UQ_Artists_Name", IsUnique = true)]
 public partial class Artist
 {
     [Key]
@@ -14,7 +14,7 @@ public partial class Artist
     public int Id { get; set; }
 
     [StringLength(128)]
-    public string Name { get; set; } = null!;
+    public string ArtistName { get; set; } = null!;
 
     [InverseProperty("Artist")]
     public virtual ICollection<ConcertRole> ConcertRoles { get; set; } = new List<ConcertRole>();

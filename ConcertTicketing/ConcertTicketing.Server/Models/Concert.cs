@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("Name", "Date", "VenueId", Name = "UQ_Concerts_Name_Date_VenueID", IsUnique = true)]
+[Index("ConcertName", "Date", "VenueId", Name = "UQ_Concerts_Name_Date_VenueID", IsUnique = true)]
 public partial class Concert
 {
     [Key]
@@ -14,7 +14,7 @@ public partial class Concert
     public long Id { get; set; }
 
     [StringLength(256)]
-    public string Name { get; set; } = null!;
+    public string ConcertName { get; set; } = null!;
 
     [StringLength(1024)]
     public string? Description { get; set; }

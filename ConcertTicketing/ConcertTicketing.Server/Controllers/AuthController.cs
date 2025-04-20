@@ -32,7 +32,7 @@ namespace ConcertTicketing.Server.Controllers
             var password = new Password
             {
                 Id = Guid.NewGuid(),
-                Password1 = hashedPassword,
+                HashedPassword = hashedPassword,
                 Salt = salt
             };
 
@@ -65,7 +65,7 @@ namespace ConcertTicketing.Server.Controllers
 
             var hashedInput = HashPassword(signinRequest.Password, customer.Password.Salt!);
 
-            if (hashedInput != customer.Password.Password1)
+            if (hashedInput != customer.Password.HashedPassword)
             {
                 return Unauthorized("Invalid credentials.");
             }

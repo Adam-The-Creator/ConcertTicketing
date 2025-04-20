@@ -12,10 +12,9 @@ public partial class Password
     [Column("ID")]
     public Guid Id { get; set; }
 
-    [Column("Password")]
     [StringLength(72)]
     [Unicode(false)]
-    public string Password1 { get; set; } = null!;
+    public string HashedPassword { get; set; } = null!;
 
     [StringLength(256)]
     [Unicode(false)]
