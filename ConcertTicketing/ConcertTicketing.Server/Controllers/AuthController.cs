@@ -21,59 +21,55 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> Register([FromBody] SignupRequest signupRequest)
         {
-            if (await _context.Customers.AnyAsync(c => c.Email == signupRequest.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == signupRequest.Email))
             {
                 return Conflict("E-mail already exists.");
             }
 
-            var salt = GenerateSalt();
-            var hashedPassword = HashPassword(signupRequest.Password, salt);
+            var hashedPassword = HashPassword(signupRequest.Password);
+            var userRole = await _context.UserRoles.FirstOrDefaultAsync(r => r.RoleName == "Customer");
+            if (userRole == null) return StatusCode(500, "User role 'Customer' not configured.");
 
             var password = new Password
             {
                 Id = Guid.NewGuid(),
-                HashedPassword = hashedPassword,
-                Salt = salt
+                HashedPassword = hashedPassword
             };
 
-            var customer = new Customer
+            var user = new User
             {
                 Id = Guid.NewGuid(),
-                Name = signupRequest.Name,
+                Username = signupRequest.Username,
                 Email = signupRequest.Email,
                 Created = DateTime.UtcNow,
                 PasswordId = password.Id,
-                Password = password
+                Password = password,
+                UserRoleId = userRole.Id
             };
 
             _context.Passwords.Add(password);
-            _context.Customers.Add(customer);
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { customer.Id, customer.Email });
+            return Ok(new { user.Id, user.Username, user.Email, user.UserRole.RoleName });
         }
 
         [HttpPost("signin")]
         public async Task<IActionResult> Login([FromBody] SigninRequest signinRequest)
         {
-            var customer = await _context.Customers.Include(c => c.Password).FirstOrDefaultAsync(c => c.Email == signinRequest.Email);
+            var user = await _context.Users.Include(u => u.Password).Include(u => u.UserRole).FirstOrDefaultAsync(u => u.Email == signinRequest.Email);
 
-            if (customer == null || customer.Password == null)
+            if (user == null || user.Password == null)
             {
                 return Unauthorized("Invalid credentials.");
             }
 
-            var hashedInput = HashPassword(signinRequest.Password, customer.Password.Salt!);
+            if (!VerifyPassword(signinRequest.Password, user.Password.HashedPassword.TrimEnd())) return Unauthorized("Invalid credentials.");
 
-            if (hashedInput != customer.Password.HashedPassword)
-            {
-                return Unauthorized("Invalid credentials.");
-            }
-
-            customer.SignedIn = DateTime.UtcNow;
+            user.SignedIn = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(new { customer.Id, customer.Name });
+            return Ok(new { user.Id, user.Username, user.Email, user.UserRole.RoleName });
         }
 
 
@@ -89,11 +85,21 @@ namespace ConcertTicketing.Server.Controllers
             var hash = SHA256.HashData(combined);
             return Convert.ToBase64String(hash);
         }
+        
+        public static string HashPassword(string password)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        public static bool VerifyPassword(string inputPassword, string hashedUserPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(inputPassword, hashedUserPassword);
+        }
     }
 
     public class SignupRequest
     {
-        public string Name { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }

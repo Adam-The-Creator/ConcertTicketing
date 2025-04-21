@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
+[Index("GenreName", Name = "IX_Genres_GenreName")]
 [Index("GenreName", Name = "UQ_Genres_Name", IsUnique = true)]
 public partial class Genre
 {

@@ -9,17 +9,19 @@ namespace ConcertTicketing.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add authorization services (if needed for your app)
+            // Add services to the container.
+
+            // Add authorization services.
             builder.Services.AddAuthorization();
 
-            // Add DB context with SQL Server
+            // Add DB context with SQL Server.
             builder.Services.AddDbContext<ConcertTicketingDBContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MainSQLServerConnection"))
             );
 
             // Add controllers
             builder.Services.AddControllers();
-            
+
             builder.Services.AddControllersWithViews();
 
             // Support CORS (cross-origin requests)
@@ -43,9 +45,6 @@ namespace ConcertTicketing.Server
             // Configure the HTTP request pipeline.
             app.UseHttpsRedirection();
 
-            app.UseRouting();
-
-            // Enable authorization
             app.UseAuthorization();
 
             var summaries = new[]

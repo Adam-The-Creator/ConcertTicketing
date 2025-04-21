@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
+[Index("OrdersId", Name = "IX_OrderTickets_OrdersID")]
+[Index("TicketId", Name = "IX_OrderTickets_TicketID")]
 public partial class OrderTicket
 {
     [Key]

@@ -36,22 +36,26 @@ public partial class Order
     public decimal TotalPrice { get; set; }
 
     [Column(TypeName = "money")]
-    public decimal? Discount { get; set; }
-
-    [Column(TypeName = "money")]
     public decimal DiscountedPrice { get; set; }
 
     [StringLength(3)]
     [Unicode(false)]
     public string Currency { get; set; } = null!;
 
-    [Column("CustomerID")]
-    public Guid? CustomerId { get; set; }
+    [Column("DiscountID")]
+    public Guid? DiscountId { get; set; }
 
-    [ForeignKey("CustomerId")]
+    [Column("UserID")]
+    public Guid? UserId { get; set; }
+
+    [ForeignKey("DiscountId")]
     [InverseProperty("Orders")]
-    public virtual Customer? Customer { get; set; }
+    public virtual Discount? Discount { get; set; }
 
     [InverseProperty("Orders")]
     public virtual ICollection<OrderTicket> OrderTickets { get; set; } = new List<OrderTicket>();
+
+    [ForeignKey("UserId")]
+    [InverseProperty("Orders")]
+    public virtual User? User { get; set; }
 }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
+[Index("ConcertId", Name = "IX_Tickets_ConcertID")]
 [Index("SerialNumber", Name = "UQ_Tickets_SerialNumber", IsUnique = true)]
 public partial class Ticket
 {

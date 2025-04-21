@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
+[Index("Date", Name = "IX_Concerts_Date")]
+[Index("MainArtistId", Name = "IX_Concerts_MainArtistID")]
+[Index("StatusId", Name = "IX_Concerts_StatusID")]
+[Index("VenueId", Name = "IX_Concerts_VenueID")]
 [Index("ConcertName", "Date", "VenueId", Name = "UQ_Concerts_Name_Date_VenueID", IsUnique = true)]
 public partial class Concert
 {
@@ -34,12 +38,12 @@ public partial class Concert
     [Column("StatusID")]
     public byte? StatusId { get; set; }
 
+    [InverseProperty("Concert")]
+    public virtual ICollection<ArtistRolesAtConcert> ArtistRolesAtConcerts { get; set; } = new List<ArtistRolesAtConcert>();
+
     [ForeignKey("ConcertGroupId")]
     [InverseProperty("Concerts")]
     public virtual ConcertGroup? ConcertGroup { get; set; }
-
-    [InverseProperty("Concert")]
-    public virtual ICollection<ConcertRole> ConcertRoles { get; set; } = new List<ConcertRole>();
 
     [ForeignKey("MainArtistId")]
     [InverseProperty("Concerts")]

@@ -6,8 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("Email", Name = "UQ_Customers_Email", IsUnique = true)]
-public partial class Customer
+[Index("Username", Name = "IX_Users_Username")]
+[Index("Email", Name = "UQ_Users_Email", IsUnique = true)]
+public partial class User
 {
     [Key]
     [Column("ID")]
@@ -15,7 +16,7 @@ public partial class Customer
 
     [StringLength(256)]
     [Unicode(false)]
-    public string Name { get; set; } = null!;
+    public string Username { get; set; } = null!;
 
     [StringLength(256)]
     [Unicode(false)]
@@ -30,10 +31,17 @@ public partial class Customer
     [Column("PasswordID")]
     public Guid? PasswordId { get; set; }
 
-    [InverseProperty("Customer")]
+    [Column("UserRoleID")]
+    public byte UserRoleId { get; set; }
+
+    [InverseProperty("User")]
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
     [ForeignKey("PasswordId")]
-    [InverseProperty("Customers")]
+    [InverseProperty("Users")]
     public virtual Password? Password { get; set; }
+
+    [ForeignKey("UserRoleId")]
+    [InverseProperty("Users")]
+    public virtual UserRole UserRole { get; set; } = null!;
 }

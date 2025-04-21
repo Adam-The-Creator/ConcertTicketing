@@ -36,7 +36,7 @@
 /*
 	CREATING DATABASE AND TABLES
 */
-CREATE DATABASE ConcertTicketingDB
+--CREATE DATABASE ConcertTicketingDB
 GO
 USE ConcertTicketingDB
 
@@ -45,13 +45,11 @@ USE ConcertTicketingDB
 IF OBJECT_ID('Passwords') IS NULL CREATE TABLE Passwords(
 	-- ATTRIBUTES
 	ID UNIQUEIDENTIFIER CONSTRAINT DF_Passwords_ID DEFAULT NEWID(),
-	HashedPassword CHAR(72) NOT NULL,
+	HashedPassword VARCHAR(72) NOT NULL,
 	--Salt VARCHAR(256),					--Not needed in case of BCrypt
 	-- CONSTRAINTS
 	CONSTRAINT PK_Passwords_ID PRIMARY KEY(ID)
 );
-
-CREATE NONCLUSTERED INDEX IX_Passwords_HashedPassword ON Passwords(HashedPassword);
 
 IF OBJECT_ID('UserRoles') IS NULL CREATE TABLE UserRoles(
 	-- ATTRIBUTES
@@ -61,8 +59,6 @@ IF OBJECT_ID('UserRoles') IS NULL CREATE TABLE UserRoles(
 	CONSTRAINT PK_UserRoles_ID PRIMARY KEY(ID),
 	CONSTRAINT CK_UserRoles_RoleName CHECK (RoleName IN ('Admin', 'Customer'))
 );
-
-CREATE NONCLUSTERED INDEX IX_UserRoles_RoleName ON UserRoles(RoleName);
 
 IF OBJECT_ID('Users') IS NULL CREATE TABLE Users(
 	-- ATTRIBUTES
@@ -80,9 +76,6 @@ IF OBJECT_ID('Users') IS NULL CREATE TABLE Users(
 	CONSTRAINT FK_Users_PasswordID FOREIGN KEY(PasswordID) REFERENCES Passwords(ID) ON DELETE SET NULL,
 	CONSTRAINT FK_Users_UserRoleID FOREIGN KEY(UserRoleID) REFERENCES UserRoles(ID) ON DELETE CASCADE
 );
-
---CREATE NONCLUSTERED INDEX IX_Users_Email ON Users(Email);		-- It has been already created by UNIQUE CONSTRAINT
-CREATE NONCLUSTERED INDEX IX_Users_Username ON Users(Username);
 
 /* CREATING TABLES FOR CONCERTS */
 IF OBJECT_ID('ConcertGroups') IS NULL CREATE TABLE ConcertGroups(
@@ -104,8 +97,6 @@ IF OBJECT_ID('ConcertStatuses') IS NULL CREATE TABLE ConcertStatuses(
 	CONSTRAINT CK_ConcertStatuses_Status CHECK (Status IN ('Upcoming', 'Cancelled', 'Finished'))
 );
 
-CREATE NONCLUSTERED INDEX IX_ConcertStatuses_Status ON ConcertStatuses(Status);
-
 IF OBJECT_ID('Venues') IS NULL CREATE TABLE Venues(
 	-- ATTRIBUTES
 	ID INT IDENTITY(1, 1),
@@ -118,8 +109,6 @@ IF OBJECT_ID('Venues') IS NULL CREATE TABLE Venues(
 	CONSTRAINT CK_Venues_Capacity CHECK (Capacity > 0 OR Capacity IS NULL)
 );
 
-CREATE NONCLUSTERED INDEX IX_Venues_Location ON Venues(Location);
-
 IF OBJECT_ID('Artists') IS NULL CREATE TABLE Artists(
 	-- ATTRIBUTES
 	ID INT IDENTITY(1, 1),
@@ -129,8 +118,6 @@ IF OBJECT_ID('Artists') IS NULL CREATE TABLE Artists(
 	CONSTRAINT UQ_Artists_Name UNIQUE(ArtistName)
 );
 
-CREATE NONCLUSTERED INDEX IX_Artists_ArtistName ON Artists(ArtistName);
-
 IF OBJECT_ID('Genres') IS NULL CREATE TABLE Genres(
 	-- ATTRIBUTES
 	ID INT IDENTITY(1, 1),
@@ -139,8 +126,6 @@ IF OBJECT_ID('Genres') IS NULL CREATE TABLE Genres(
 	CONSTRAINT PK_Genres_ID PRIMARY KEY(ID),
 	CONSTRAINT UQ_Genres_Name UNIQUE(GenreName)
 );
-
-CREATE NONCLUSTERED INDEX IX_Genres_GenreName ON Genres(GenreName);
 	
 IF OBJECT_ID('ArtistRoles') IS NULL CREATE TABLE ArtistRoles(
 	-- ATTRIBUTES
@@ -150,8 +135,6 @@ IF OBJECT_ID('ArtistRoles') IS NULL CREATE TABLE ArtistRoles(
 	CONSTRAINT PK_ArtistRoles_ID PRIMARY KEY(ID),
 	CONSTRAINT UQ_ArtistRoles_Role UNIQUE(RoleName)
 );
-
-CREATE NONCLUSTERED INDEX IX_ArtistRoles_RoleName ON ArtistRoles(RoleName);
 
 IF OBJECT_ID('GenresOfArtists') IS NULL CREATE TABLE GenresOfArtists(
 	--Reference Table to represent M:N relations
@@ -164,9 +147,6 @@ IF OBJECT_ID('GenresOfArtists') IS NULL CREATE TABLE GenresOfArtists(
 	CONSTRAINT FK_GenresOfArtists_ArtistID FOREIGN KEY(ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE ON UPDATE CASCADE,
 	CONSTRAINT FK_GenresOfArtists_GenreID FOREIGN KEY(GenreID) REFERENCES Genres(ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
-CREATE NONCLUSTERED INDEX IX_GenresOfArtists_ArtistID ON GenresOfArtists(ArtistID);
-CREATE NONCLUSTERED INDEX IX_GenresOfArtists_GenreID ON GenresOfArtists(GenreID);
 
 IF OBJECT_ID('Concerts') IS NULL CREATE TABLE Concerts(
 	-- ATTRIBUTES
@@ -186,11 +166,6 @@ IF OBJECT_ID('Concerts') IS NULL CREATE TABLE Concerts(
 	CONSTRAINT FK_Concerts_StatusID FOREIGN KEY(StatusID) REFERENCES ConcertStatuses(ID) ON DELETE SET NULL,
 	CONSTRAINT UQ_Concerts_Name_Date_VenueID UNIQUE (ConcertName, Date, VenueID)
 );
-
-CREATE NONCLUSTERED INDEX IX_Concerts_Date ON Concerts(Date);
-CREATE NONCLUSTERED INDEX IX_Concerts_VenueID ON Concerts(VenueID);
-CREATE NONCLUSTERED INDEX IX_Concerts_MainArtistID ON Concerts(MainArtistID);
-CREATE NONCLUSTERED INDEX IX_Concerts_StatusID ON Concerts(StatusID);
 
 IF OBJECT_ID('ArtistRolesAtConcerts') IS NULL CREATE TABLE ArtistRolesAtConcerts(
 	--Intersection Table
@@ -222,8 +197,6 @@ IF OBJECT_ID('TicketCategories') IS NULL CREATE TABLE TicketCategories(
 	CONSTRAINT FK_TicketCategories_ConcertID FOREIGN KEY(ConcertID) REFERENCES Concerts(ID) ON DELETE SET NULL
 );
 
-CREATE NONCLUSTERED INDEX IX_TicketCategories_ConcertID ON TicketCategories(ConcertID);
-
 IF OBJECT_ID('TicketStatuses') IS NULL CREATE TABLE TicketStatuses (
 	-- ATTRIBUTES
 	ID TINYINT IDENTITY(1,1),
@@ -233,8 +206,6 @@ IF OBJECT_ID('TicketStatuses') IS NULL CREATE TABLE TicketStatuses (
 	CONSTRAINT UQ_TicketStatuses_Status UNIQUE(Status),
 	CONSTRAINT CK_TicketStatuses_Status CHECK (Status IN ('Available', 'Reserved', 'Paid', 'Cancelled'))
 );
-
-CREATE NONCLUSTERED INDEX IX_TicketStatuses_Status ON TicketStatuses(Status);
 
 IF OBJECT_ID('Tickets') IS NULL CREATE TABLE Tickets(
 	-- ATTRIBUTES
@@ -252,8 +223,6 @@ IF OBJECT_ID('Tickets') IS NULL CREATE TABLE Tickets(
 	CONSTRAINT FK_Tickets_ConcertID FOREIGN KEY(ConcertID) REFERENCES Concerts(ID) ON DELETE SET NULL,
 	CONSTRAINT FK_Tickets_TicketStatusID FOREIGN KEY(TicketStatusID) REFERENCES TicketStatuses(ID) ON DELETE SET NULL
 );
-
-CREATE NONCLUSTERED INDEX IX_Tickets_ConcertID ON Tickets(ConcertID);
 
 /* CREATING TABLES FOR ORDERS */
 IF OBJECT_ID('Discounts') IS NULL CREATE TABLE Discounts(		-- In the future, a DiscountStatuses table can be exist to track the used/unused discounts. Discounts for VIP, NON-VIP tickets.
@@ -302,8 +271,59 @@ IF OBJECT_ID('OrderTickets') IS NULL CREATE TABLE OrderTickets(
 	CONSTRAINT FK_OrderTickets_OrdersID FOREIGN KEY(OrdersID) REFERENCES Orders(ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+/* CREATE NONCLUSTERED INDICES */
+GO
+CREATE NONCLUSTERED INDEX IX_Passwords_HashedPassword ON Passwords(HashedPassword);
+CREATE NONCLUSTERED INDEX IX_UserRoles_RoleName ON UserRoles(RoleName);
+--CREATE NONCLUSTERED INDEX IX_Users_Email ON Users(Email);		-- It has been already created by UNIQUE CONSTRAINT
+CREATE NONCLUSTERED INDEX IX_Users_Username ON Users(Username);
+CREATE NONCLUSTERED INDEX IX_ConcertStatuses_Status ON ConcertStatuses(Status);
+CREATE NONCLUSTERED INDEX IX_Venues_Location ON Venues(Location);
+CREATE NONCLUSTERED INDEX IX_Artists_ArtistName ON Artists(ArtistName);
+CREATE NONCLUSTERED INDEX IX_Genres_GenreName ON Genres(GenreName);
+CREATE NONCLUSTERED INDEX IX_ArtistRoles_RoleName ON ArtistRoles(RoleName);
+CREATE NONCLUSTERED INDEX IX_GenresOfArtists_ArtistID ON GenresOfArtists(ArtistID);
+CREATE NONCLUSTERED INDEX IX_GenresOfArtists_GenreID ON GenresOfArtists(GenreID);
+CREATE NONCLUSTERED INDEX IX_Concerts_Date ON Concerts(Date);
+CREATE NONCLUSTERED INDEX IX_Concerts_VenueID ON Concerts(VenueID);
+CREATE NONCLUSTERED INDEX IX_Concerts_MainArtistID ON Concerts(MainArtistID);
+CREATE NONCLUSTERED INDEX IX_Concerts_StatusID ON Concerts(StatusID);
+CREATE NONCLUSTERED INDEX IX_TicketCategories_ConcertID ON TicketCategories(ConcertID);
+CREATE NONCLUSTERED INDEX IX_TicketStatuses_Status ON TicketStatuses(Status);
+CREATE NONCLUSTERED INDEX IX_Tickets_ConcertID ON Tickets(ConcertID);
 CREATE NONCLUSTERED INDEX IX_OrderTickets_OrdersID ON OrderTickets(OrdersID);
 CREATE NONCLUSTERED INDEX IX_OrderTickets_TicketID ON OrderTickets(TicketID);
+
+/* INIT ROLES AND STATUSES */
+INSERT INTO UserRoles(RoleName) VALUES ('Admin'), ('Customer');
+INSERT INTO ConcertStatuses(Status) VALUES ('Upcoming'), ('Cancelled'), ('Finished');
+INSERT INTO TicketStatuses(Status) VALUES ('Available'), ('Reserved'), ('Paid'), ('Cancelled');
+
+
+/* DROP NONCLUSTERED INDICES */
+/*
+GO
+DROP INDEX dbo.Passwords.IX_Passwords_HashedPassword;
+DROP INDEX dbo.UserRoles.IX_UserRoles_RoleName;
+--DROP INDEX dbo.Users.IX_Users_Email;
+DROP INDEX dbo.Users.IX_Users_Username;
+DROP INDEX dbo.ConcertStatuses.IX_ConcertStatuses_Status;
+DROP INDEX dbo.Venues.IX_Venues_Location;
+DROP INDEX dbo.Artists.IX_Artists_ArtistName;
+DROP INDEX dbo.Genres.IX_Genres_GenreName;
+DROP INDEX dbo.ArtistRoles.IX_ArtistRoles_RoleName;
+DROP INDEX dbo.GenresOfArtists.IX_GenresOfArtists_ArtistID;
+DROP INDEX dbo.GenresOfArtists.IX_GenresOfArtists_GenreID;
+DROP INDEX dbo.Concerts.IX_Concerts_Date;
+DROP INDEX dbo.Concerts.IX_Concerts_VenueID;
+DROP INDEX dbo.Concerts.IX_Concerts_MainArtistID;
+DROP INDEX dbo.Concerts.IX_Concerts_StatusID;
+DROP INDEX dbo.TicketCategories.IX_TicketCategories_ConcertID;
+DROP INDEX dbo.TicketStatuses.IX_TicketStatuses_Status;
+DROP INDEX dbo.Tickets.IX_Tickets_ConcertID;
+DROP INDEX dbo.OrderTickets.IX_OrderTickets_OrdersID;
+DROP INDEX dbo.OrderTickets.IX_OrderTickets_TicketID;
+*/
 
 /* DROP TABLES */
 /*

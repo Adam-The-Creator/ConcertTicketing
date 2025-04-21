@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ConcertTicketing.Server.Models;
 
 [PrimaryKey("ConcertId", "ArtistId", "RoleId")]
-public partial class ConcertRole
+public partial class ArtistRolesAtConcert
 {
     [Key]
     [Column("ConcertID")]
@@ -22,14 +22,14 @@ public partial class ConcertRole
     public byte RoleId { get; set; }
 
     [ForeignKey("ArtistId")]
-    [InverseProperty("ConcertRoles")]
+    [InverseProperty("ArtistRolesAtConcerts")]
     public virtual Artist Artist { get; set; } = null!;
 
     [ForeignKey("ConcertId")]
-    [InverseProperty("ConcertRoles")]
+    [InverseProperty("ArtistRolesAtConcerts")]
     public virtual Concert Concert { get; set; } = null!;
 
     [ForeignKey("RoleId")]
-    [InverseProperty("ConcertRoles")]
-    public virtual Role Role { get; set; } = null!;
+    [InverseProperty("ArtistRolesAtConcerts")]
+    public virtual ArtistRole Role { get; set; } = null!;
 }

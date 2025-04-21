@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using ConcertTicketing.Server.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace ConcertTicketing.Server.Data.Context;
 
@@ -14,15 +13,17 @@ public partial class ConcertTicketingDBContext : DbContext
 
     public virtual DbSet<Artist> Artists { get; set; }
 
+    public virtual DbSet<ArtistRole> ArtistRoles { get; set; }
+
+    public virtual DbSet<ArtistRolesAtConcert> ArtistRolesAtConcerts { get; set; }
+
     public virtual DbSet<Concert> Concerts { get; set; }
 
     public virtual DbSet<ConcertGroup> ConcertGroups { get; set; }
 
-    public virtual DbSet<ConcertRole> ConcertRoles { get; set; }
-
     public virtual DbSet<ConcertStatus> ConcertStatuses { get; set; }
 
-    public virtual DbSet<Customer> Customers { get; set; }
+    public virtual DbSet<Discount> Discounts { get; set; }
 
     public virtual DbSet<Genre> Genres { get; set; }
 
@@ -34,13 +35,15 @@ public partial class ConcertTicketingDBContext : DbContext
 
     public virtual DbSet<Password> Passwords { get; set; }
 
-    public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<Ticket> Tickets { get; set; }
 
     public virtual DbSet<TicketCategory> TicketCategories { get; set; }
 
     public virtual DbSet<TicketStatus> TicketStatuses { get; set; }
+
+    public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<UserRole> UserRoles { get; set; }
 
     public virtual DbSet<Venue> Venues { get; set; }
 
@@ -65,6 +68,24 @@ public partial class ConcertTicketingDBContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_Artists_ID");
         });
 
+        modelBuilder.Entity<ArtistRole>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ArtistRoles_ID");
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+        });
+
+        modelBuilder.Entity<ArtistRolesAtConcert>(entity =>
+        {
+            entity.HasKey(e => new { e.ConcertId, e.ArtistId, e.RoleId }).HasName("PK_ArtistRolesAtConcerts_ConcertID_ArtistID_RoleID");
+
+            entity.HasOne(d => d.Artist).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_ArtistID");
+
+            entity.HasOne(d => d.Concert).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_ConcertID");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_RoleID");
+        });
+
         modelBuilder.Entity<Concert>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Concerts_ID");
@@ -87,17 +108,6 @@ public partial class ConcertTicketingDBContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_ConcertGroups_ID");
         });
 
-        modelBuilder.Entity<ConcertRole>(entity =>
-        {
-            entity.HasKey(e => new { e.ConcertId, e.ArtistId, e.RoleId }).HasName("PK_ConcertRoles_ConcertID_ArtistID_RoleID");
-
-            entity.HasOne(d => d.Artist).WithMany(p => p.ConcertRoles).HasConstraintName("FK_ConcertRoles_ArtistID");
-
-            entity.HasOne(d => d.Concert).WithMany(p => p.ConcertRoles).HasConstraintName("FK_ConcertRoles_ConcertID");
-
-            entity.HasOne(d => d.Role).WithMany(p => p.ConcertRoles).HasConstraintName("FK_ConcertRoles_RoleID");
-        });
-
         modelBuilder.Entity<ConcertStatus>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_ConcertStatuses_ID");
@@ -105,16 +115,12 @@ public partial class ConcertTicketingDBContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
         });
 
-        modelBuilder.Entity<Customer>(entity =>
+        modelBuilder.Entity<Discount>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_Customers_ID");
+            entity.HasKey(e => e.Id).HasName("PK_Discounts_ID");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Created).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Password).WithMany(p => p.Customers)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Customers_PasswordID");
         });
 
         modelBuilder.Entity<Genre>(entity =>
@@ -141,9 +147,11 @@ public partial class ConcertTicketingDBContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+            entity.HasOne(d => d.Discount).WithMany(p => p.Orders).HasConstraintName("FK_Orders_DiscountID");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Orders_CustomerID");
+                .HasConstraintName("FK_Orders_UserID");
         });
 
         modelBuilder.Entity<OrderTicket>(entity =>
@@ -164,13 +172,6 @@ public partial class ConcertTicketingDBContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_Passwords_ID");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-        });
-
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK_Roles_ID");
-
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<Ticket>(entity =>
@@ -206,6 +207,27 @@ public partial class ConcertTicketingDBContext : DbContext
         modelBuilder.Entity<TicketStatus>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_TicketStatuses_ID");
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Users_ID");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Created).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Password).WithMany(p => p.Users)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Users_PasswordID");
+
+            entity.HasOne(d => d.UserRole).WithMany(p => p.Users).HasConstraintName("FK_Users_UserRoleID");
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_UserRoles_ID");
 
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
         });

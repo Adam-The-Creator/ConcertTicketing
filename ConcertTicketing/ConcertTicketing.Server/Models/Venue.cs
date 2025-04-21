@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
+[Index("Location", Name = "IX_Venues_Location")]
 public partial class Venue
 {
     [Key]

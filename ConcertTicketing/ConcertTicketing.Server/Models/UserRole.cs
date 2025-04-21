@@ -6,17 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("HashedPassword", Name = "IX_Passwords_HashedPassword")]
-public partial class Password
+[Index("RoleName", Name = "IX_UserRoles_RoleName")]
+public partial class UserRole
 {
     [Key]
     [Column("ID")]
-    public Guid Id { get; set; }
+    public byte Id { get; set; }
 
-    [StringLength(72)]
+    [StringLength(20)]
     [Unicode(false)]
-    public string HashedPassword { get; set; } = null!;
+    public string? RoleName { get; set; }
 
-    [InverseProperty("Password")]
+    [InverseProperty("UserRole")]
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }
