@@ -365,6 +365,15 @@ IF OBJECT_ID('Venues') IS NOT NULL DROP TABLE Venues;
 IF OBJECT_ID('Artists') IS NOT NULL DROP TABLE Artists;
 */
 
+----------------------------------------------------------------------------------------------
+--------------------------------------- DANGER ZONE ------------------------------------------
+----------------------------------------------------------------------------------------------
+
+/*
+	DROPPING DATABASE WILL ALSO DELETE THE USERS AND THEIR ROLES AND ACCESS
+	CONNCECTED TO THE DATABASE.
+*/
+
 /* DROP DATABASE */
 /*
 USE master;
