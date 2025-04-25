@@ -6,9 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("RoleName", Name = "IX_UserRoles_RoleName")]
-[Index("RoleName", Name = "UQ_UserRoles_RoleName", IsUnique = true)]
-public partial class UserRole
+[Index("Status", Name = "UQ_DiscountStatuses_Status", IsUnique = true)]
+public partial class DiscountStatus
 {
     [Key]
     [Column("ID")]
@@ -16,8 +15,8 @@ public partial class UserRole
 
     [StringLength(20)]
     [Unicode(false)]
-    public string RoleName { get; set; } = null!;
+    public string Status { get; set; } = null!;
 
-    [InverseProperty("UserRole")]
-    public virtual ICollection<User> Users { get; set; } = new List<User>();
+    [InverseProperty("Status")]
+    public virtual ICollection<Discount> Discounts { get; set; } = new List<Discount>();
 }

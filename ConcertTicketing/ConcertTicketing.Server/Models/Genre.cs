@@ -18,6 +18,7 @@ public partial class Genre
     [Unicode(false)]
     public string GenreName { get; set; } = null!;
 
-    [InverseProperty("Genre")]
-    public virtual ICollection<GenresOfArtist> GenresOfArtists { get; set; } = new List<GenresOfArtist>();
+    [ForeignKey("GenreId")]
+    [InverseProperty("Genres")]
+    public virtual ICollection<Artist> Artists { get; set; } = new List<Artist>();
 }

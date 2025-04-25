@@ -27,16 +27,16 @@ public partial class Concert
     public DateTime Date { get; set; }
 
     [Column("VenueID")]
-    public int? VenueId { get; set; }
+    public long VenueId { get; set; }
 
     [Column("MainArtistID")]
-    public int? MainArtistId { get; set; }
+    public long? MainArtistId { get; set; }
 
     [Column("ConcertGroupID")]
     public int? ConcertGroupId { get; set; }
 
     [Column("StatusID")]
-    public byte? StatusId { get; set; }
+    public byte StatusId { get; set; }
 
     [InverseProperty("Concert")]
     public virtual ICollection<ArtistRolesAtConcert> ArtistRolesAtConcerts { get; set; } = new List<ArtistRolesAtConcert>();
@@ -51,15 +51,15 @@ public partial class Concert
 
     [ForeignKey("StatusId")]
     [InverseProperty("Concerts")]
-    public virtual ConcertStatus? Status { get; set; }
+    public virtual ConcertStatus Status { get; set; } = null!;
 
     [InverseProperty("Concert")]
-    public virtual ICollection<TicketCategory> TicketCategories { get; set; } = new List<TicketCategory>();
+    public virtual ICollection<TicketDetail> TicketDetails { get; set; } = new List<TicketDetail>();
 
     [InverseProperty("Concert")]
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 
     [ForeignKey("VenueId")]
     [InverseProperty("Concerts")]
-    public virtual Venue? Venue { get; set; }
+    public virtual Venue Venue { get; set; } = null!;
 }

@@ -18,5 +18,5 @@ public partial class Password
     public string HashedPassword { get; set; } = null!;
 
     [InverseProperty("Password")]
-    public virtual ICollection<User> Users { get; set; } = new List<User>();
+    public virtual User? User { get; set; }
 }

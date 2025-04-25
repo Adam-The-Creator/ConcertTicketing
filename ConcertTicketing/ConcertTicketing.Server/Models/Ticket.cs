@@ -25,8 +25,8 @@ public partial class Ticket
     [Column(TypeName = "datetime")]
     public DateTime? PurchaseDate { get; set; }
 
-    [Column("TicketCategoryID")]
-    public long? TicketCategoryId { get; set; }
+    [Column("TicketDetailID")]
+    public long? TicketDetailId { get; set; }
 
     [Column("ConcertID")]
     public long? ConcertId { get; set; }
@@ -41,9 +41,9 @@ public partial class Ticket
     [InverseProperty("Ticket")]
     public virtual ICollection<OrderTicket> OrderTickets { get; set; } = new List<OrderTicket>();
 
-    [ForeignKey("TicketCategoryId")]
+    [ForeignKey("TicketDetailId")]
     [InverseProperty("Tickets")]
-    public virtual TicketCategory? TicketCategory { get; set; }
+    public virtual TicketDetail? TicketDetail { get; set; }
 
     [ForeignKey("TicketStatusId")]
     [InverseProperty("Tickets")]

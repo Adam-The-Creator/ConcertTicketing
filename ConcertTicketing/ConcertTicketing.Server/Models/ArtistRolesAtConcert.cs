@@ -15,7 +15,7 @@ public partial class ArtistRolesAtConcert
 
     [Key]
     [Column("ArtistID")]
-    public int ArtistId { get; set; }
+    public long ArtistId { get; set; }
 
     [Key]
     [Column("RoleID")]

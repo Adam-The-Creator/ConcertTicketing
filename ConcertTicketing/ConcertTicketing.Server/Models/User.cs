@@ -8,6 +8,7 @@ namespace ConcertTicketing.Server.Models;
 
 [Index("Username", Name = "IX_Users_Username")]
 [Index("Email", Name = "UQ_Users_Email", IsUnique = true)]
+[Index("PasswordId", Name = "UQ_Users_PasswordID", IsUnique = true)]
 public partial class User
 {
     [Key]
@@ -38,7 +39,7 @@ public partial class User
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
     [ForeignKey("PasswordId")]
-    [InverseProperty("Users")]
+    [InverseProperty("User")]
     public virtual Password? Password { get; set; }
 
     [ForeignKey("UserRoleId")]

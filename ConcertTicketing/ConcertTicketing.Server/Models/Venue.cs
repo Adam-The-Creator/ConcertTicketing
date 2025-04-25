@@ -11,11 +11,11 @@ public partial class Venue
 {
     [Key]
     [Column("ID")]
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     [StringLength(256)]
     [Unicode(false)]
-    public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
     [StringLength(256)]
     [Unicode(false)]

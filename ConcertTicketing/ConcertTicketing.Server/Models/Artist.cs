@@ -12,7 +12,7 @@ public partial class Artist
 {
     [Key]
     [Column("ID")]
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     [StringLength(128)]
     public string ArtistName { get; set; } = null!;
@@ -23,6 +23,7 @@ public partial class Artist
     [InverseProperty("MainArtist")]
     public virtual ICollection<Concert> Concerts { get; set; } = new List<Concert>();
 
-    [InverseProperty("Artist")]
-    public virtual ICollection<GenresOfArtist> GenresOfArtists { get; set; } = new List<GenresOfArtist>();
+    [ForeignKey("ArtistId")]
+    [InverseProperty("Artists")]
+    public virtual ICollection<Genre> Genres { get; set; } = new List<Genre>();
 }

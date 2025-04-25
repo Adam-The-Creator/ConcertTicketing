@@ -19,7 +19,7 @@ namespace ConcertTicketing.Server.Controllers
         public AuthController(ConcertTicketingDBContext context) => _context = context;
 
         [HttpPost("signup")]
-        public async Task<IActionResult> Register([FromBody] SignupRequest signupRequest)
+        public async Task<IActionResult> Signup([FromBody] SignupRequest signupRequest)
         {
             if (await _context.Users.AnyAsync(u => u.Email == signupRequest.Email))
             {
@@ -41,7 +41,7 @@ namespace ConcertTicketing.Server.Controllers
                 Id = Guid.NewGuid(),
                 Username = signupRequest.Username,
                 Email = signupRequest.Email,
-                Created = DateTime.UtcNow,
+                Created = DateTime.Now,
                 PasswordId = password.Id,
                 Password = password,
                 UserRoleId = userRole.Id
@@ -55,7 +55,7 @@ namespace ConcertTicketing.Server.Controllers
         }
 
         [HttpPost("signin")]
-        public async Task<IActionResult> Login([FromBody] SigninRequest signinRequest)
+        public async Task<IActionResult> Signin([FromBody] SigninRequest signinRequest)
         {
             var user = await _context.Users.Include(u => u.Password).Include(u => u.UserRole).FirstOrDefaultAsync(u => u.Email == signinRequest.Email);
 
@@ -66,7 +66,7 @@ namespace ConcertTicketing.Server.Controllers
 
             if (!VerifyPassword(signinRequest.Password, user.Password.HashedPassword.TrimEnd())) return Unauthorized("Invalid credentials.");
 
-            user.SignedIn = DateTime.UtcNow;
+            user.SignedIn = DateTime.Now;
             await _context.SaveChangesAsync();
 
             return Ok(new { user.Id, user.Username, user.Email, user.UserRole.RoleName });

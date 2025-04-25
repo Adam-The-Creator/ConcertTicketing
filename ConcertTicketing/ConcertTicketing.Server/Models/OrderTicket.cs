@@ -6,23 +6,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("OrdersId", Name = "IX_OrderTickets_OrdersID")]
+[Index("OrderId", Name = "IX_OrderTickets_OrdersID")]
 [Index("TicketId", Name = "IX_OrderTickets_TicketID")]
 public partial class OrderTicket
 {
     [Key]
     [Column("ID")]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [Column("TicketID")]
     public Guid? TicketId { get; set; }
 
-    [Column("OrdersID")]
-    public Guid? OrdersId { get; set; }
+    [Column("OrderID")]
+    public Guid? OrderId { get; set; }
 
-    [ForeignKey("OrdersId")]
+    [ForeignKey("OrderId")]
     [InverseProperty("OrderTickets")]
-    public virtual Order? Orders { get; set; }
+    public virtual Order? Order { get; set; }
 
     [ForeignKey("TicketId")]
     [InverseProperty("OrderTickets")]

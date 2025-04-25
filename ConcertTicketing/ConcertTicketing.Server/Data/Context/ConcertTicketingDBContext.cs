@@ -25,9 +25,9 @@ public partial class ConcertTicketingDBContext : DbContext
 
     public virtual DbSet<Discount> Discounts { get; set; }
 
-    public virtual DbSet<Genre> Genres { get; set; }
+    public virtual DbSet<DiscountStatus> DiscountStatuses { get; set; }
 
-    public virtual DbSet<GenresOfArtist> GenresOfArtists { get; set; }
+    public virtual DbSet<Genre> Genres { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
 
@@ -37,7 +37,7 @@ public partial class ConcertTicketingDBContext : DbContext
 
     public virtual DbSet<Ticket> Tickets { get; set; }
 
-    public virtual DbSet<TicketCategory> TicketCategories { get; set; }
+    public virtual DbSet<TicketDetail> TicketDetails { get; set; }
 
     public virtual DbSet<TicketStatus> TicketStatuses { get; set; }
 
@@ -50,7 +50,7 @@ public partial class ConcertTicketingDBContext : DbContext
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //{
     //    //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-    //    //optionsBuilder.UseSqlServer("Data Source=192.168.1.84\\MAIN,11500;Initial Catalog=ConcertTicketingDB;User ID=DESKTOP-3I9NATQ;Password=db-admin;TrustServerCertificate=True;");
+    //    //optionsBuilder.UseSqlServer("Data Source=192.168.1.97\\MAIN,11500;Initial Catalog=ConcertTicketingDB;User ID=DESKTOP-3I9NATQ;Password=db-admin;TrustServerCertificate=True;");
 
     //    //if (!optionsBuilder.IsConfigured)
     //    //{
@@ -66,6 +66,27 @@ public partial class ConcertTicketingDBContext : DbContext
         modelBuilder.Entity<Artist>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Artists_ID");
+
+            entity.HasMany(d => d.Genres).WithMany(p => p.Artists)
+                .UsingEntity<Dictionary<string, object>>(
+                    "GenresOfArtist",
+                    r => r.HasOne<Genre>().WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_GenresOfArtists_GenreID"),
+                    l => l.HasOne<Artist>().WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_GenresOfArtists_ArtistID"),
+                    j =>
+                    {
+                        j.HasKey("ArtistId", "GenreId").HasName("PK_GenresOfArtists_ArtistID_GenreID");
+                        j.ToTable("GenresOfArtists");
+                        j.HasIndex(new[] { "ArtistId" }, "IX_GenresOfArtists_ArtistID");
+                        j.HasIndex(new[] { "GenreId" }, "IX_GenresOfArtists_GenreID");
+                        j.IndexerProperty<long>("ArtistId").HasColumnName("ArtistID");
+                        j.IndexerProperty<int>("GenreId").HasColumnName("GenreID");
+                    });
         });
 
         modelBuilder.Entity<ArtistRole>(entity =>
@@ -79,11 +100,17 @@ public partial class ConcertTicketingDBContext : DbContext
         {
             entity.HasKey(e => new { e.ConcertId, e.ArtistId, e.RoleId }).HasName("PK_ArtistRolesAtConcerts_ConcertID_ArtistID_RoleID");
 
-            entity.HasOne(d => d.Artist).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_ArtistID");
+            entity.HasOne(d => d.Artist).WithMany(p => p.ArtistRolesAtConcerts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ArtistRolesAtConcerts_ArtistID");
 
-            entity.HasOne(d => d.Concert).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_ConcertID");
+            entity.HasOne(d => d.Concert).WithMany(p => p.ArtistRolesAtConcerts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ArtistRolesAtConcerts_ConcertID");
 
-            entity.HasOne(d => d.Role).WithMany(p => p.ArtistRolesAtConcerts).HasConstraintName("FK_ArtistRolesAtConcerts_RoleID");
+            entity.HasOne(d => d.Role).WithMany(p => p.ArtistRolesAtConcerts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ArtistRolesAtConcerts_RoleID");
         });
 
         modelBuilder.Entity<Concert>(entity =>
@@ -97,10 +124,12 @@ public partial class ConcertTicketingDBContext : DbContext
             entity.HasOne(d => d.MainArtist).WithMany(p => p.Concerts).HasConstraintName("FK_Concerts_MainArtistID");
 
             entity.HasOne(d => d.Status).WithMany(p => p.Concerts)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Concerts_StatusID");
 
-            entity.HasOne(d => d.Venue).WithMany(p => p.Concerts).HasConstraintName("FK_Concerts_VenueID");
+            entity.HasOne(d => d.Venue).WithMany(p => p.Concerts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Concerts_VenueID");
         });
 
         modelBuilder.Entity<ConcertGroup>(entity =>
@@ -121,24 +150,23 @@ public partial class ConcertTicketingDBContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Created).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.DiscountCode).HasDefaultValueSql("(NULL)");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Discounts)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Discounts_StatusID");
+        });
+
+        modelBuilder.Entity<DiscountStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_DiscountStatuses_ID");
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<Genre>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Genres_ID");
-        });
-
-        modelBuilder.Entity<GenresOfArtist>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK_GenresOfArtists_ID");
-
-            entity.HasOne(d => d.Artist).WithMany(p => p.GenresOfArtists)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_GenresOfArtists_ArtistID");
-
-            entity.HasOne(d => d.Genre).WithMany(p => p.GenresOfArtists)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_GenresOfArtists_GenreID");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -158,9 +186,11 @@ public partial class ConcertTicketingDBContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_OrderTickets_ID");
 
-            entity.HasOne(d => d.Orders).WithMany(p => p.OrderTickets)
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderTickets)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_OrderTickets_OrdersID");
+                .HasConstraintName("FK_OrderTickets_OrderID");
 
             entity.HasOne(d => d.Ticket).WithMany(p => p.OrderTickets)
                 .OnDelete(DeleteBehavior.Cascade)
@@ -180,28 +210,22 @@ public partial class ConcertTicketingDBContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
-            entity.HasOne(d => d.Concert).WithMany(p => p.Tickets)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Tickets_ConcertID");
+            entity.HasOne(d => d.Concert).WithMany(p => p.Tickets).HasConstraintName("FK_Tickets_ConcertID");
 
-            entity.HasOne(d => d.TicketCategory).WithMany(p => p.Tickets)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Tickets_TicketCategoryID");
+            entity.HasOne(d => d.TicketDetail).WithMany(p => p.Tickets).HasConstraintName("FK_Tickets_TicketDetailID");
 
-            entity.HasOne(d => d.TicketStatus).WithMany(p => p.Tickets)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Tickets_TicketStatusID");
+            entity.HasOne(d => d.TicketStatus).WithMany(p => p.Tickets).HasConstraintName("FK_Tickets_TicketStatusID");
         });
 
-        modelBuilder.Entity<TicketCategory>(entity =>
+        modelBuilder.Entity<TicketDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_TicketCategories_ID");
+            entity.HasKey(e => e.Id).HasName("PK_TicketDetails_ID");
 
             entity.Property(e => e.StartDate).HasDefaultValueSql("(NULL)");
 
-            entity.HasOne(d => d.Concert).WithMany(p => p.TicketCategories)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_TicketCategories_ConcertID");
+            entity.HasOne(d => d.Concert).WithMany(p => p.TicketDetails)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TicketDetails_ConcertID");
         });
 
         modelBuilder.Entity<TicketStatus>(entity =>
@@ -217,10 +241,9 @@ public partial class ConcertTicketingDBContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Created).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.SignedIn).HasDefaultValueSql("(NULL)");
 
-            entity.HasOne(d => d.Password).WithMany(p => p.Users)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Users_PasswordID");
+            entity.HasOne(d => d.Password).WithOne(p => p.User).HasConstraintName("FK_Users_PasswordID");
 
             entity.HasOne(d => d.UserRole).WithMany(p => p.Users).HasConstraintName("FK_Users_UserRoleID");
         });

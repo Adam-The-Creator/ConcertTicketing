@@ -12,6 +12,10 @@ public partial class Discount
     [Column("ID")]
     public Guid Id { get; set; }
 
+    [StringLength(128)]
+    [Unicode(false)]
+    public string? DiscountCode { get; set; }
+
     public byte DiscountValue { get; set; }
 
     [Column(TypeName = "datetime")]
@@ -23,6 +27,13 @@ public partial class Discount
     [Column(TypeName = "datetime")]
     public DateTime EndDate { get; set; }
 
+    [Column("StatusID")]
+    public byte StatusId { get; set; }
+
     [InverseProperty("Discount")]
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    [ForeignKey("StatusId")]
+    [InverseProperty("Discounts")]
+    public virtual DiscountStatus Status { get; set; } = null!;
 }

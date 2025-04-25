@@ -21,7 +21,7 @@ public partial class Order
 
     [StringLength(256)]
     [Unicode(false)]
-    public string? DeliveryEmail { get; set; }
+    public string DeliveryEmail { get; set; } = null!;
 
     [Column(TypeName = "datetime")]
     public DateTime? PreferredDeliveryTime { get; set; }
@@ -52,7 +52,7 @@ public partial class Order
     [InverseProperty("Orders")]
     public virtual Discount? Discount { get; set; }
 
-    [InverseProperty("Orders")]
+    [InverseProperty("Order")]
     public virtual ICollection<OrderTicket> OrderTickets { get; set; } = new List<OrderTicket>();
 
     [ForeignKey("UserId")]
