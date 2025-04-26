@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -21,6 +22,10 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupRequest signupRequest)
         {
+            if (string.IsNullOrWhiteSpace(signupRequest.Username)) return BadRequest("Username is required.");
+            if (string.IsNullOrWhiteSpace(signupRequest.Email)) return BadRequest("Email is required.");
+            if (string.IsNullOrWhiteSpace(signupRequest.Password)) return BadRequest("Password is required.");
+
             if (await _context.Users.AnyAsync(u => u.Email == signupRequest.Email))
             {
                 return Conflict("E-mail already exists.");
@@ -57,6 +62,9 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost("signin")]
         public async Task<IActionResult> Signin([FromBody] SigninRequest signinRequest)
         {
+            if (string.IsNullOrWhiteSpace(signinRequest.Email)) return BadRequest("Email is required.");
+            if (string.IsNullOrWhiteSpace(signinRequest.Password)) return BadRequest("Password is required.");
+
             var user = await _context.Users.Include(u => u.Password).Include(u => u.UserRole).FirstOrDefaultAsync(u => u.Email == signinRequest.Email);
 
             if (user == null || user.Password == null)
@@ -99,14 +107,14 @@ namespace ConcertTicketing.Server.Controllers
 
     public class SignupRequest
     {
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        [JsonPropertyName("Username")]  public string Username { get; set; } = string.Empty;
+        [JsonPropertyName("Email")]     public string Email { get; set; } = string.Empty;
+        [JsonPropertyName("Password")]  public string Password { get; set; } = string.Empty;
     }
 
     public class SigninRequest
     {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        [JsonPropertyName("Email")]     public string Email { get; set; } = string.Empty;
+        [JsonPropertyName("Password")]  public string Password { get; set; } = string.Empty;
     }
 }
