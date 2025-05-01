@@ -1,0 +1,70 @@
+﻿.App {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+}
+
+.navbar {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgb(29, 29, 29);
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+}
+
+.brand-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.logo {
+    margin-right: 10px;
+}
+
+.brand {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    justify-items: flex-end;
+}
+
+.nav-button {
+    font-size: 1.1em;
+    padding: 10px 1em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    height: 40px;
+}
+
+.nav-button:hover {
+    background-color: rgba(60, 60, 60, 0.70);
+    transition-duration: 400ms;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.footer {
+    background-color: rgb(29, 29, 29);
+    padding: 10px 20px;
+    text-align: center;
+    border-top: 1px solid #ccc;
+}

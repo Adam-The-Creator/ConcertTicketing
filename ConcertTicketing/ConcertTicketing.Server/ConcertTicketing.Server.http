@@ -1,6 +1,11 @@
 @ConcertTicketing.Server_HostAddress = http://localhost:5185
 
-GET {{ConcertTicketing.Server_HostAddress}}/weatherforecast/
-Accept: application/json
+# GET {{ConcertTicketing.Server_HostAddress}}/weatherforecast/
+# Accept: application/json
 
-###
+# ###
+
+# GET {{ConcertTicketing.Server_HostAddress}}/concertticketing/
+# Accept: application/json
+
+# ###

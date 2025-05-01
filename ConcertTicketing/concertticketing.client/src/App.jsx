@@ -1,51 +1,32 @@
 import { useEffect, useState } from 'react';
-import './App.css';
+import './css/App.css';
 
 function App() {
-    const [forecasts, setForecasts] = useState();
-
-    useEffect(() => {
-        populateWeatherData();
-    }, []);
-
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
-
     return (
-        <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
+        <div className="App">
+            <header className="navbar">
+                <div className="navbar-left">
+                    <a href="#" className="brand-link nav-button nav-button-brand"> 
+                        <img src="./src/assets/tickets_icon.png" alt="Logo" className="logo" width="30px"/>
+                        <span className="brand">Concert Ticketing</span>
+                    </a>
+                </div>
+                <nav className="navbar-right">
+                    <div className="nav-button">Concerts and Events</div>
+                    <div className="nav-button">Festivals</div>
+                    <div className="nav-button">Login</div>
+                </nav>
+            </header>
+
+            <main id="main" className="main-content">
+                <h1>Welcome to Concert Ticketing</h1>
+            </main>
+
+            <footer className="footer">
+                <a href="#">About</a>
+            </footer>
         </div>
     );
-    
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        if (response.ok) {
-            const data = await response.json();
-            setForecasts(data);
-        }
-    }
 }
 
 export default App;
