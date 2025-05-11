@@ -153,6 +153,7 @@ IF OBJECT_ID('GenresOfArtists') IS NULL CREATE TABLE GenresOfArtists(
 IF OBJECT_ID('Concerts') IS NULL CREATE TABLE Concerts(
 	-- ATTRIBUTES
 	ID BIGINT IDENTITY(1, 1),
+	ImageUrl VARCHAR(1024) NULL,
 	ConcertName NVARCHAR(256) NOT NULL,	-- / ALTERNATE KEY
 	Description NVARCHAR(1024),
 	Date DATETIME NOT NULL,				-- / ALTERNATE KEY
@@ -317,6 +318,230 @@ CREATE NONCLUSTERED INDEX IX_OrderTickets_TicketID ON OrderTickets(TicketID);
 INSERT INTO UserRoles(RoleName) VALUES ('Admin'), ('Customer');
 INSERT INTO ConcertStatuses(Status) VALUES ('Upcoming'), ('Cancelled'), ('Finished');
 INSERT INTO TicketStatuses(Status) VALUES ('Available'), ('Reserved'), ('Paid'), ('Cancelled');
+
+
+/* FILL TABLES WITH DUMMY DATAS */
+INSERT INTO Venues (Name, Location, Type, Capacity) VALUES
+	('Budapest Arena',					'Budapest, Hungary',		'Stadium',						12000),	--ID 1
+	('Müpa Budapest',					'Budapest, Hungary',		'Concert Hall',					1700),	--ID 2
+	('Liszt Ferenc Kulturális Központ', 'Debrecen, Hungary',		'Cultural Center',				800),	--ID 3
+	('Madison Square Garden',			'New York, USA',			'Arena',						20000),	--ID 4
+	('Red Rocks Amphitheatre',			'Morrison, Colorado, USA',	'Amphitheatre',					9525),	--ID 5
+	('Royal Albert Hall',				'London, UK',				'Concert Hall',					5272),	--ID 6
+	('Sydney Opera House',				'Sydney, Australia',		'Opera House',					5738),	--ID 7
+	('The O2 Arena',					'London, UK',				'Arena',						20000),	--ID 8
+	('Tokyo Dome',						'Tokyo, Japan',				'Stadium',						55000),	--ID 9
+	('Elbphilharmonie',					'Hamburg, Germany',			'Concert Hall',					2100),	--ID 10
+	('Dalhalla Amphitheatre',			'Rättvik, Sweden',			'Open-Air Quarry Amphitheatre',	4000),	--ID 11
+	('Aurora Sound Dome',				'Reykjavík, Iceland',		'Futuristic Dome Arena',		12000),	--ID 12
+	('Skyline Pulse Arena',				'Dubai, UAE',				'Rooftop Electronic Venue',		8500),	--ID 13
+	('Sziget Fesztivál Nagyszínpad',	'Budapest, Hungary',		'Outdoor Concert Venue',		80000);	--ID 14
+
+INSERT INTO Artists (ArtistName) VALUES
+	('Martin Garrix'),			--ID 1
+	('Calvin Harris'),			--ID 2
+	('Dua Lipa'),				--ID 3
+	('The Weeknd'),				--ID 4
+	('Daft Punk'),				--ID 5
+	('Punnany Massif'),			--ID 6
+	('Halott Pénz'),			--ID 7
+	('Quimby'),					--ID 8
+	('Kiscsillag'),				--ID 9
+	('Margaret Island'),		--ID 10
+	('Stardust Strings'),		--ID 11
+	('Neon Pulse'),				--ID 12
+	('Echoes of Tomorrow'),		--ID 13
+	('Solar Drift'),			--ID 14
+	('Velvet Echo'),			--ID 15
+	('Aurora Dreams'),			--ID 16
+	('John Doe'),				--ID 17
+	('The Funky Beats'),		--ID 18
+	('Classical Quartet'),		--ID 19
+	('The Electric Waves'),		--ID 20
+	('DJ Nova'),				--ID 21
+	('Aurora Strings'),			--ID 22
+	('The Jazz Cats'),			--ID 23
+	('Budapest Arena'),			--ID 24
+	('RockStorm'),				--ID 25
+	('Harmony Choir');			--ID 26
+
+INSERT INTO Genres (GenreName) VALUES
+	('Progressive House'),		--ID 1
+	('Big Room House'),			--ID 2
+	('Electro House'),			--ID 3
+	('Future Bass'),			--ID 4
+	('EDM'),					--ID 5
+	('Dance-pop'),				--ID 6
+	('Synth-pop'),				--ID 7
+	('Pop'),					--ID 8
+	('Electropop'),				--ID 9
+	('Disco-pop'),				--ID 10
+	('Alternative R&B'),		--ID 11
+	('Dark R&B'),				--ID 12
+	('House'),					--ID 13
+	('French House'),			--ID 14
+	('Electronic'),				--ID 15
+	('Rap'),					--ID 16
+	('Hip hop'),				--ID 17
+	('Alternative Rock'),		--ID 18
+	('Indie Rock'),				--ID 19
+	('Indie Pop'),				--ID 20
+	('Folk Pop'),				--ID 21
+	('Ambient'),				--ID 22
+	('Chillout'),				--ID 23
+	('Synthwave'),				--ID 24
+	('Progressive Rock');		--ID 25
+
+INSERT INTO ArtistRoles (RoleName) VALUES
+    ('Main Artist'),			--ID 1
+    ('Supporting band'),		--ID 2
+    ('Special Guest'),			--ID 3
+    ('DJ set'),					--ID 4
+    ('Acoustic performance'),	--ID 5
+    ('Opening Act'),			--ID 6
+    ('Vocalist'),				--ID 7
+    ('Instrumentalist'),		--ID 8
+    ('Guest Artist'),			--ID 9
+    ('Invited Soloist'),		--ID 10
+    ('Contributing Artist'),	--ID 11
+    ('Warm-up artist');			--ID 12
+
+INSERT INTO ConcertGroups (Name) VALUES
+	('Solo Show'),				--ID 1
+	('Festival Day Pass'),		--ID 2
+	('Special Event');			--ID 3
+
+INSERT INTO Concerts (ImageUrl, ConcertName, Description, Date, VenueID, MainArtistID, ConcertGroupID, StatusID) VALUES
+	(--ID 1
+		NULL,
+		'John Doe Live in Budapest',
+		'John Doe performs his latest hits in a grand solo show.',
+		'2025-07-15 20:00:00',
+		1,	-- Budapest Arena
+		17,	-- John Doe
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 2
+		'./src/assets/FunkyBeats.jpg',
+		'Funky Beats Festival Day',
+		'A day full of groove with The Funky Beats and special guests.',
+		'2025-08-01 14:00:00',
+		2,	-- Müpa Budapest
+		18,	-- The Funky Beats
+		2,	-- Festival Day Pass
+		1	-- Upcoming
+	),
+	(--ID 3
+		NULL,
+		'Classical Quartet Gala',
+		'An intimate evening of classical masterpieces.',
+		'2025-09-10 19:30:00',
+		3,	-- Liszt Ferenc Kulturális Központ
+		19,	-- Classical Quartet
+		3,	-- Special Event
+		1	-- Upcoming
+	),
+	(--ID 4
+		'./src/assets/MartinGarrix.jpg',
+		'Martin Garrix – Tomorrow Beats',
+		'World famous DJ Martin Garrix returns to Budapest with a spectacular electronic music show.',
+		'2025-07-22 21:00:00',
+		1,	-- Budapest Arena
+		1,	-- Martin Garrix
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 5
+		NULL,
+		'Punnany Massif – Summer Closing Concert',
+		'The band Punnany Massif is preparing a special end-of-summer concert for their fans.',
+		'2025-08-30 20:00:00',
+		2,	-- Müpa Budapest
+		6,	-- Punnany Massif
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 6
+		NULL,
+		'The Electric Waves – Summer Vibes',
+		'The Electric Waves band will present an unforgettable summer concert.',
+		'2025-07-15 20:00:00',
+		3,	-- Liszt Ferenc Kulturális Központ
+		20,	-- The Electric Waves
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 7
+		'./src/assets/NightPulse.jpg',
+		'DJ Nova – Night Pulse',
+		'DJ Nova invites the audience on a night-time electronic music journey.',
+		'2025-08-10 22:00:00',
+		14,	-- Sziget Fesztivál Nagyszínpad
+		21,	-- DJ Nova
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 8
+		NULL,
+		'Aurora Strings – Classical Evenings',
+		'The Aurora Strings string quartet is preparing an evening of classical music for the audience.',
+		'2025-09-05 19:30:00',
+		2,	-- Müpa Budapest
+		22,	-- Aurora Strings
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 9
+		NULL,
+		'The Jazz Cats – Smooth Nights',
+		'The Jazz Cats band is waiting for the music lovers with a pleasant jazz evening.',
+		'2025-09-12 20:00:00',
+		2,	-- Müpa Budapest
+		23,	-- The Jazz Cats
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 10
+		NULL,
+		'Luna & The Stars – Pop Explosion',
+		'Luna and her band are preparing an energetic pop concert for the fans.',
+		'2025-08-20 21:00:00',
+		1,	-- Budapest Arena
+		24,	-- Luna & The Stars
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 11
+		'./src/assets/RockStorm.jpg',
+		'RockStorm – Thunder Tour',
+		'RockStorm is coming to Budapest with a thunderous rock concert.',
+		'2025-09-18 20:00:00',
+		1,	-- Budapest Arena
+		25,	-- RockStorm
+		1,	-- Solo Show
+		1	-- Upcoming
+	),
+	(--ID 12
+		NULL,
+		'Electro Pulse Festival',
+		'Electro Pulse Festival brings the best electronic music artists together for one day.',
+		'2025-08-15 16:00:00',
+		1,	-- Budapest Arena
+		20,	-- The Electric Waves
+		2,	-- Festival Day Pass
+		1	-- Upcoming
+	),
+	(--ID 13
+		NULL,
+		'Harmony Choir – Sacred Sounds',
+		'The Harmony Choir is preparing a special sacred music concert.',
+		'2025-09-25 19:00:00',
+		5,	-- Red Rocks Amphitheatre
+		10,	-- Harmony Choir
+		1,	-- Solo Show
+		1	-- Upcoming
+	);
 
 
 /* DROP NONCLUSTERED INDICES */

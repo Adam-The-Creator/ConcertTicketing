@@ -38,6 +38,10 @@ public partial class Concert
     [Column("StatusID")]
     public byte StatusId { get; set; }
 
+    [StringLength(1024)]
+    [Unicode(false)]
+    public string? ImageUrl { get; set; }
+
     [InverseProperty("Concert")]
     public virtual ICollection<ArtistRolesAtConcert> ArtistRolesAtConcerts { get; set; } = new List<ArtistRolesAtConcert>();
 

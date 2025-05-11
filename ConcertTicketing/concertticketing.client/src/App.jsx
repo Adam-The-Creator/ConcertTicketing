@@ -2,9 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import AdminContent from './components/AdminContent';
+import UpcomingEvents from './components/UpcomingEvents';
+import Concerts from './components/Concerts';
 import './css/App.css';
 import './css/AuthForm.css';
 import './css/ProfileDropdown.css';
+import './css/UpcomingEvents.css';
 
 function App() {
     const [authView, setAuthView] = useState('home');
@@ -91,8 +94,8 @@ function App() {
                             <AdminContent />
                         ) : (
                             <>
-                                <h1>Welcome to Concert Ticketing</h1>
-                                {userData && <p>Welcome, {userData.username}!</p>}
+                                <UpcomingEvents />
+                                <Concerts />
                             </>
                         )}
                     </>
