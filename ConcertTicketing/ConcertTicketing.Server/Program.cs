@@ -25,18 +25,21 @@ namespace ConcertTicketing.Server
             builder.Services.AddControllersWithViews();
 
             // Support CORS (cross-origin requests)
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowAll",
-            //        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-            //});
+            var AllowClientOrigins = "AllowClientOrigins";
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: AllowClientOrigins,
+                    policy => policy.WithOrigins("https://localhost:54053").AllowAnyHeader().AllowAnyMethod()
+                );
+            });
 
             builder.Services.AddEndpointsApiExplorer();
 
             var app = builder.Build();
 
             // Enable CORS
-            //app.UseCors("AllowAll");
+            app.UseCors(AllowClientOrigins);
 
             // Enable static files and default files
             app.UseDefaultFiles();
