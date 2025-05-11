@@ -184,17 +184,11 @@ public partial class ConcertTicketingDBContext : DbContext
 
         modelBuilder.Entity<OrderTicket>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_OrderTickets_ID");
+            entity.HasKey(e => new { e.TicketId, e.OrderId }).HasName("PK_OrderTickets_TicketID_OrderID");
 
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderTickets).HasConstraintName("FK_OrderTickets_OrderID");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.OrderTickets)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_OrderTickets_OrderID");
-
-            entity.HasOne(d => d.Ticket).WithMany(p => p.OrderTickets)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_OrderTickets_TicketID");
+            entity.HasOne(d => d.Ticket).WithOne(p => p.OrderTicket).HasConstraintName("FK_OrderTickets_TicketID");
         });
 
         modelBuilder.Entity<Password>(entity =>

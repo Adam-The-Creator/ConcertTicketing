@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("ArtistName", Name = "IX_Artists_ArtistName")]
 [Index("ArtistName", Name = "UQ_Artists_Name", IsUnique = true)]
 public partial class Artist
 {

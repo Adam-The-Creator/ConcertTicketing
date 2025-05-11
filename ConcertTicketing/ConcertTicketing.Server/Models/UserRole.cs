@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("RoleName", Name = "IX_UserRoles_RoleName")]
 [Index("RoleName", Name = "UQ_UserRoles_RoleName", IsUnique = true)]
 public partial class UserRole
 {

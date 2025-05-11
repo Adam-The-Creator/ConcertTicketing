@@ -20,16 +20,16 @@
 
 	MAIN SERVER ROLES:
 		Provides RW access to the API.
-		Master-Master Replication between MAIN-SECONDARY.
+		Tramsactional Replication between MAIN-SECONDARY via DIST.
 
 	SECONDARY SERVER ROLES:
-		Provides RW access to the API.
-		Master-Master Replication between MAIN-SECONDARY.
+		Provides R access to the API.
+		Transactional Replication between MAIN-SECONDARY via DIST.
 
 	LOG SERVER ROLES:
 		It receives backup and log datas.
-		Master-Slave Replication between MAIN-LOG.
-		Master-Slave Replication between SECONDARY-LOG.
+		Replication between MAIN-LOG.
+		Replication between SECONDARY-LOG.
 */
 
 
@@ -42,7 +42,7 @@ USE ConcertTicketingDB
 
 
 /* CREATEING TABLE FOR USER CREDENTIALS */
-IF OBJECT_ID('Passwords') IS NULL CREATE TABLE Passwords(		--MOT
+IF OBJECT_ID('Passwords') IS NULL CREATE TABLE Passwords(									--MOT
 	-- ATTRIBUTES
 	ID UNIQUEIDENTIFIER CONSTRAINT DF_Passwords_ID DEFAULT NEWID(),
 	HashedPassword VARCHAR(72) NOT NULL,
@@ -61,7 +61,7 @@ IF OBJECT_ID('UserRoles') IS NULL CREATE TABLE UserRoles(
 	CONSTRAINT CK_UserRoles_RoleName CHECK (RoleName IN ('Admin', 'Customer'))
 );
 
-IF OBJECT_ID('Users') IS NULL CREATE TABLE Users(				--MOT
+IF OBJECT_ID('Users') IS NULL CREATE TABLE Users(											--MOT
 	-- ATTRIBUTES
 	ID UNIQUEIDENTIFIER CONSTRAINT DF_Users_ID DEFAULT NEWID(),
 	Username VARCHAR(256) NOT NULL,
@@ -177,14 +177,14 @@ IF OBJECT_ID('ArtistRolesAtConcerts') IS NULL CREATE TABLE ArtistRolesAtConcerts
 	ArtistID BIGINT,
 	RoleID TINYINT,
 	-- CONSTRAINTS
-	CONSTRAINT PK_ArtistRolesAtConcerts_ConcertID_ArtistID_RoleID PRIMARY KEY (ConcertID, ArtistID, RoleID),								-- / COMPOSITE PRIMARY KEY
+	CONSTRAINT PK_ArtistRolesAtConcerts_ConcertID_ArtistID_RoleID PRIMARY KEY (ConcertID, ArtistID, RoleID),										-- / COMPOSITE PRIMARY KEY
 	CONSTRAINT FK_ArtistRolesAtConcerts_ConcertID FOREIGN KEY(ConcertID) REFERENCES Concerts(ID) ON DELETE NO ACTION ON UPDATE NO ACTION,
-	CONSTRAINT FK_ArtistRolesAtConcerts_ArtistID FOREIGN KEY(ArtistID) REFERENCES Artists(ID) ON DELETE NO ACTION ON UPDATE NO ACTION,			-- / ALTERNATE KEY
+	CONSTRAINT FK_ArtistRolesAtConcerts_ArtistID FOREIGN KEY(ArtistID) REFERENCES Artists(ID) ON DELETE NO ACTION ON UPDATE NO ACTION,				-- / ALTERNATE KEY
 	CONSTRAINT FK_ArtistRolesAtConcerts_RoleID FOREIGN KEY(RoleID) REFERENCES ArtistRoles(ID) ON DELETE NO ACTION ON UPDATE NO ACTION				-- / ALTERNATE KEY
 );
 
 /* CREATING TABLES FOR TICKETS */
-IF OBJECT_ID('TicketDetails') IS NULL CREATE TABLE TicketDetails(				--MOT
+IF OBJECT_ID('TicketDetails') IS NULL CREATE TABLE TicketDetails(							--MOT
 	-- ATTRIBUTES
 	ID BIGINT IDENTITY(1, 1),
 	Description NVARCHAR(256),
@@ -209,7 +209,7 @@ IF OBJECT_ID('TicketStatuses') IS NULL CREATE TABLE TicketStatuses (
 	CONSTRAINT CK_TicketStatuses_Status CHECK (Status IN ('Available', 'Reserved', 'Paid', 'Cancelled'))
 );
 
-IF OBJECT_ID('Tickets') IS NULL CREATE TABLE Tickets(							--MOT
+IF OBJECT_ID('Tickets') IS NULL CREATE TABLE Tickets(										--MOT
 	-- ATTRIBUTES
 	ID UNIQUEIDENTIFIER CONSTRAINT DF_Tickets_ID DEFAULT NEWID(),
 	SerialNumber VARCHAR(256) NOT NULL,		-- / ALTERNATE KEY
@@ -254,7 +254,7 @@ IF OBJECT_ID('Discounts') IS NULL CREATE TABLE Discounts(
 );
 
 /* CREATING TABLES FOR ORDERS */
-IF OBJECT_ID('Orders') IS NULL CREATE TABLE Orders(								--MOT
+IF OBJECT_ID('Orders') IS NULL CREATE TABLE Orders(											--MOT
 	-- ATTRIBUTES
 	ID UNIQUEIDENTIFIER CONSTRAINT DF_Orders_ID DEFAULT NEWID(),
 	OrderDate DATETIME NOT NULL,
@@ -276,14 +276,16 @@ IF OBJECT_ID('Orders') IS NULL CREATE TABLE Orders(								--MOT
 	CONSTRAINT FK_Orders_UserID FOREIGN KEY(UserID) REFERENCES Users(ID) ON DELETE SET NULL
 );
 
-IF OBJECT_ID('OrderTickets') IS NULL CREATE TABLE OrderTickets(					--MOT
+IF OBJECT_ID('OrderTickets') IS NULL CREATE TABLE OrderTickets(								--MOT
 	--Reference Table
 	-- ATTRIBUTES
-	ID UNIQUEIDENTIFIER CONSTRAINT DF_OrderTickets_ID DEFAULT NEWID(),
+	--ID UNIQUEIDENTIFIER CONSTRAINT DF_OrderTickets_ID DEFAULT NEWID(),
 	TicketID UNIQUEIDENTIFIER,		-- / ALTERNATE KEY
 	OrderID UNIQUEIDENTIFIER,		-- / ALTERNATE KEY
 	-- CONSTRAINTS
-	CONSTRAINT PK_OrderTickets_ID PRIMARY KEY(ID),
+	--CONSTRAINT PK_OrderTickets_ID PRIMARY KEY(ID),
+	CONSTRAINT PK_OrderTickets_TicketID_OrderID PRIMARY KEY(TicketID, OrderID),
+	CONSTRAINT UQ_OrderTickets_TicketID UNIQUE(TicketID),
 	CONSTRAINT FK_OrderTickets_TicketID FOREIGN KEY(TicketID) REFERENCES Tickets(ID) ON DELETE CASCADE ON UPDATE CASCADE,
 	CONSTRAINT FK_OrderTickets_OrderID FOREIGN KEY(OrderID) REFERENCES Orders(ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -291,14 +293,14 @@ IF OBJECT_ID('OrderTickets') IS NULL CREATE TABLE OrderTickets(					--MOT
 /* CREATE NONCLUSTERED INDICES */
 GO
 CREATE NONCLUSTERED INDEX IX_Passwords_HashedPassword ON Passwords(HashedPassword);
-CREATE NONCLUSTERED INDEX IX_UserRoles_RoleName ON UserRoles(RoleName);
---CREATE NONCLUSTERED INDEX IX_Users_Email ON Users(Email);		-- It has been already created by UNIQUE CONSTRAINT
+--CREATE NONCLUSTERED INDEX IX_UserRoles_RoleName ON UserRoles(RoleName);					-- It has already been created by UNIQUE CONSTRAINT
+--CREATE NONCLUSTERED INDEX IX_Users_Email ON Users(Email);									-- It has already been created by UNIQUE CONSTRAINT
 CREATE NONCLUSTERED INDEX IX_Users_Username ON Users(Username);
-CREATE NONCLUSTERED INDEX IX_ConcertStatuses_Status ON ConcertStatuses(Status);
+--CREATE NONCLUSTERED INDEX IX_ConcertStatuses_Status ON ConcertStatuses(Status);			-- It has already been created by UNIQUE CONSTRAINT
 CREATE NONCLUSTERED INDEX IX_Venues_Location ON Venues(Location);
-CREATE NONCLUSTERED INDEX IX_Artists_ArtistName ON Artists(ArtistName);
-CREATE NONCLUSTERED INDEX IX_Genres_GenreName ON Genres(GenreName);
-CREATE NONCLUSTERED INDEX IX_ArtistRoles_RoleName ON ArtistRoles(RoleName);
+--CREATE NONCLUSTERED INDEX IX_Artists_ArtistName ON Artists(ArtistName);					-- It has already been created by UNIQUE CONSTRAINT
+--CREATE NONCLUSTERED INDEX IX_Genres_GenreName ON Genres(GenreName);						-- It has already been created by UNIQUE CONSTRAINT
+--CREATE NONCLUSTERED INDEX IX_ArtistRoles_RoleName ON ArtistRoles(RoleName);				-- It has already been created by UNIQUE CONSTRAINT
 CREATE NONCLUSTERED INDEX IX_GenresOfArtists_ArtistID ON GenresOfArtists(ArtistID);
 CREATE NONCLUSTERED INDEX IX_GenresOfArtists_GenreID ON GenresOfArtists(GenreID);
 CREATE NONCLUSTERED INDEX IX_Concerts_Date ON Concerts(Date);
@@ -321,14 +323,14 @@ INSERT INTO TicketStatuses(Status) VALUES ('Available'), ('Reserved'), ('Paid'),
 /*
 GO
 DROP INDEX dbo.Passwords.IX_Passwords_HashedPassword;
-DROP INDEX dbo.UserRoles.IX_UserRoles_RoleName;
+--DROP INDEX dbo.UserRoles.IX_UserRoles_RoleName;
 --DROP INDEX dbo.Users.IX_Users_Email;
 DROP INDEX dbo.Users.IX_Users_Username;
-DROP INDEX dbo.ConcertStatuses.IX_ConcertStatuses_Status;
+--DROP INDEX dbo.ConcertStatuses.IX_ConcertStatuses_Status;
 DROP INDEX dbo.Venues.IX_Venues_Location;
-DROP INDEX dbo.Artists.IX_Artists_ArtistName;
-DROP INDEX dbo.Genres.IX_Genres_GenreName;
-DROP INDEX dbo.ArtistRoles.IX_ArtistRoles_RoleName;
+--DROP INDEX dbo.Artists.IX_Artists_ArtistName;
+--DROP INDEX dbo.Genres.IX_Genres_GenreName;
+--DROP INDEX dbo.ArtistRoles.IX_ArtistRoles_RoleName;
 DROP INDEX dbo.GenresOfArtists.IX_GenresOfArtists_ArtistID;
 DROP INDEX dbo.GenresOfArtists.IX_GenresOfArtists_GenreID;
 DROP INDEX dbo.Concerts.IX_Concerts_Date;
@@ -344,6 +346,8 @@ DROP INDEX dbo.OrderTickets.IX_OrderTickets_TicketID;
 
 /* DROP TABLES */
 /*
+USE ConcertTicketingDB
+GO
 IF OBJECT_ID('OrderTickets') IS NOT NULL DROP TABLE OrderTickets;
 IF OBJECT_ID('Orders') IS NOT NULL DROP TABLE Orders;
 IF OBJECT_ID('Discounts') IS NOT NULL DROP TABLE Discounts;

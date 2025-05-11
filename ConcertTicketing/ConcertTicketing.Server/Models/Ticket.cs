@@ -39,7 +39,7 @@ public partial class Ticket
     public virtual Concert? Concert { get; set; }
 
     [InverseProperty("Ticket")]
-    public virtual ICollection<OrderTicket> OrderTickets { get; set; } = new List<OrderTicket>();
+    public virtual OrderTicket? OrderTicket { get; set; }
 
     [ForeignKey("TicketDetailId")]
     [InverseProperty("Tickets")]

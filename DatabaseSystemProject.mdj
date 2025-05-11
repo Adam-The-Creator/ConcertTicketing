@@ -1453,7 +1453,7 @@
 									"parentStyle": true,
 									"left": 728,
 									"top": 925,
-									"width": 248.25146484375,
+									"width": 248,
 									"height": 13,
 									"text": "OrderTickets"
 								},
@@ -1480,7 +1480,7 @@
 											"parentStyle": true,
 											"left": 733,
 											"top": 948,
-											"width": 238.25146484375,
+											"width": 238,
 											"height": 13
 										},
 										{
@@ -1496,7 +1496,7 @@
 											"parentStyle": true,
 											"left": 733,
 											"top": 963,
-											"width": 238.25146484375,
+											"width": 238,
 											"height": 13
 										}
 									],
@@ -1504,7 +1504,7 @@
 									"parentStyle": true,
 									"left": 728,
 									"top": 943,
-									"width": 248.25146484375,
+									"width": 248,
 									"height": 38
 								}
 							],
@@ -1512,7 +1512,7 @@
 							"parentStyle": false,
 							"left": 728,
 							"top": 920,
-							"width": 248.25146484375,
+							"width": 248,
 							"height": 64,
 							"nameLabel": {
 								"$ref": "AAAAAAGWZzt9Nfr/t/U="
@@ -5248,7 +5248,8 @@
 							"foreignKey": true,
 							"referenceTo": {
 								"$ref": "AAAAAAGWZ9Myr/vue30="
-							}
+							},
+							"unique": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -5382,8 +5383,7 @@
 								},
 								"reference": {
 									"$ref": "AAAAAAGWZzt9Nfr8Rbg="
-								},
-								"cardinality": "0..*"
+								}
 							}
 						}
 					],
@@ -6514,9 +6514,9 @@
 									},
 									"font": "Arial;13;0",
 									"parentStyle": true,
-									"left": 37.7890625,
+									"left": 35.59912109375,
 									"top": 13,
-									"width": 124.26806640625,
+									"width": 110.4873046875,
 									"height": 13,
 									"text": "SystemRequirements"
 								},
@@ -6530,7 +6530,7 @@
 									"parentStyle": true,
 									"left": 13,
 									"top": 13,
-									"width": 18.7890625,
+									"width": 16.59912109375,
 									"height": 13,
 									"text": "req"
 								}
@@ -7797,7 +7797,7 @@
 									"parentStyle": true,
 									"left": 540,
 									"top": 167.5,
-									"width": 95.22998046875,
+									"width": 94,
 									"height": 38,
 									"stereotypeLabel": {
 										"$ref": "AAAAAAGWckFc5JYVZRY="

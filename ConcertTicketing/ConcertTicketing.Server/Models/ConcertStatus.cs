@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Models;
 
-[Index("Status", Name = "IX_ConcertStatuses_Status")]
 [Index("Status", Name = "UQ_ConcertStatuses_Status", IsUnique = true)]
 public partial class ConcertStatus
 {
