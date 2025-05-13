@@ -1,7 +1,8 @@
 function Concerts() {
-  return (
-    <p>Hello world!</p>
-  );
+    return (
+        // TODO: Render all the available concerts.
+        <p>Hello world!</p>
+    );
 }
 
 export default Concerts;

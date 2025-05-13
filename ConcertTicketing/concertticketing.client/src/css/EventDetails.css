@@ -1,0 +1,77 @@
+.event-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.event-details .image-container {
+    flex: 1 1 45%;
+    max-width: 500px;
+}
+
+.event-details .image-container img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.event-details .text-container {
+    flex: 1 1 50%;
+}
+
+.event-details .text-container h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.event-details .text-container p {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.event-details .buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+.event-details .buttons button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.event-details .buttons .back-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.event-details .buttons .back-btn:hover {
+    background-color: #0056b3;
+}
+
+.event-details .buttons .buy-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.event-details .buttons .buy-btn:hover {
+    background-color: #218838;
+}
+
+.event-details .sold-out {
+    margin-top: 1em;
+    padding: 1em;
+    background-color: lightcoral;
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}

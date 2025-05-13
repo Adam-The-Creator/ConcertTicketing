@@ -34,6 +34,68 @@ namespace ConcertTicketing.Server.Controllers
 
             return Ok(upcomingEvents);
         }
+
+        // GET: api/events/eventdetails/{eventId}
+        [HttpGet("eventdetails/{eventId}")]
+        public async Task<ActionResult<EventDetails>> GetEventDetails(int eventId)
+        {
+            var concert = await _context.Concerts
+                .Include(c => c.Venue)
+                .Include(c => c.MainArtist)
+                .Include(c => c.ArtistRolesAtConcerts)
+                .ThenInclude(arac => arac.Artist)
+                .ThenInclude(a => a.Genres)
+                .Where(c => c.Id == eventId)
+                .FirstOrDefaultAsync();
+            
+            if (concert == null)
+            {
+                return NotFound();
+            }
+
+            var allArtists = concert.ArtistRolesAtConcerts
+                .Select(arac => arac.Artist.ArtistName)
+                .Distinct()
+                .ToList();
+
+            var allGenres = concert.ArtistRolesAtConcerts
+                .SelectMany(arac => arac.Artist.Genres)
+                .Concat(concert.MainArtist.Genres)
+                .Select(g => g.GenreName)
+                .Distinct()
+                .ToList();
+
+            var eventDetails = new EventDetails
+            {
+                ID = concert.Id,
+                ConcertName = concert.ConcertName,
+                Description = concert.Description,
+                Date = concert.Date,
+                ImageUrl = concert.ImageUrl,
+                VenueName = concert.Venue.Name,
+                VenueLocation = concert.Venue.Location,
+                MainArtistName = concert.MainArtist.ArtistName,
+                Artists = allArtists,
+                Genres = allGenres
+            };
+
+            return Ok(eventDetails);
+        }
+
+    }
+
+    public class EventDetails
+    {
+        public long ID { get; set; }
+        public string ConcertName { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public DateTime Date { get; set; }
+        public string? ImageUrl { get; set; }
+        public string VenueName { get; set; } = null!;
+        public string VenueLocation { get; set; } = null!;
+        public string MainArtistName { get; set; } = null!;
+        public List<string> Artists { get; set; } = [];
+        public List<string> Genres { get; set; } = [];
     }
 
     public class UpcomingEvents

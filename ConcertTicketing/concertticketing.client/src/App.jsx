@@ -4,15 +4,20 @@ import SignUp from './components/SignUp';
 import AdminContent from './components/AdminContent';
 import UpcomingEvents from './components/UpcomingEvents';
 import Concerts from './components/Concerts';
+import EventDetails from './components/EventDetails';
+import Profile from './components/Profile';
 import './css/App.css';
 import './css/AuthForm.css';
 import './css/ProfileDropdown.css';
 import './css/UpcomingEvents.css';
+import './css/EventDetails.css';
+import './css/AdminContent.css';
 
 function App() {
     const [authView, setAuthView] = useState('home');
     const [userData, setUserData] = useState(null);
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const profileRef = useRef(null);
 
     useEffect(() => {
@@ -41,7 +46,11 @@ function App() {
         setUserData(data);
         localStorage.setItem('user', JSON.stringify(data));
         setTimeout(() => {
-            setAuthView('home');
+            if (data.roleName === 'Admin') {
+                setAuthView('admin');
+            } else {
+                setAuthView('home');
+            }
         }, 2500);
     };
 
@@ -56,13 +65,28 @@ function App() {
         <div className="App">
             <header className="navbar">
                 <div className="navbar-left">
-                    <a href="#" className="brand-link nav-button nav-button-brand"> 
+                    <a href="#" className="brand-link nav-button nav-button-brand" onClick={(e) => {
+                        e.preventDefault();
+                        setAuthView('home');
+                        setSelectedEvent(null);
+                    }}> 
                         <img src="./src/assets/tickets_icon.png" alt="Logo" className="logo" width="30px"/>
                         <span className="brand">Concert Ticketing</span>
                     </a>
                 </div>
                 <nav className="navbar-right">
-                    <div className="nav-button" onClick={() => setAuthView('home')}>Concerts and Events</div>
+                    {userData && userData.roleName === 'Admin' && (
+                        <div className="nav-button" onClick={() => {
+                            setAuthView('admin');
+                            setSelectedEvent(null);
+                        }}>
+                            Admin Page
+                        </div>
+                    )}
+                    <div className="nav-button" onClick={() => {
+                        setAuthView('home');
+                        setSelectedEvent(null);
+                    }}>Concerts and Events</div>
                     <div className="nav-button">Festivals</div>
                     {userData ? (
                         <div className="nav-button profile-container" ref={profileRef}>
@@ -72,7 +96,12 @@ function App() {
 
                             {profileDropdownOpen && (
                                 <div className="profile-dropdown">
-                                    <button className="dropdown-item">Profile</button>
+                                    <button className="dropdown-item" onClick={() => {
+                                        setAuthView('profile');
+                                        setProfileDropdownOpen(false);
+                                    }}>
+                                        Profile
+                                    </button>
                                     <button className="dropdown-item" onClick={handleLogout}>Logout</button>
                                 </div>
                             )}
@@ -88,16 +117,16 @@ function App() {
                     <SignIn onSwitch={() => setAuthView('signup')} onSuccess={handleLoginSuccess} />
                 ) : authView === 'signup' ? (
                     <SignUp onSwitch={() => setAuthView('signin')} />
+                ) : authView === 'profile' ? (
+                    <Profile />
+                ) : selectedEvent ? (
+                    <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+                ) : authView === 'admin' ? (
+                    <AdminContent />
                 ) : (
                     <>
-                        {userData && userData.roleName === 'Admin' ? (
-                            <AdminContent />
-                        ) : (
-                            <>
-                                <UpcomingEvents />
-                                <Concerts />
-                            </>
-                        )}
+                        <UpcomingEvents onSelectEvent={setSelectedEvent} />
+                        <Concerts />
                     </>
                 )}
             </main>
