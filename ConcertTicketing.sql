@@ -315,12 +315,14 @@ CREATE NONCLUSTERED INDEX IX_OrderTickets_OrdersID ON OrderTickets(OrderID);
 CREATE NONCLUSTERED INDEX IX_OrderTickets_TicketID ON OrderTickets(TicketID);
 
 /* INIT ROLES AND STATUSES */
+/*
 INSERT INTO UserRoles(RoleName) VALUES ('Admin'), ('Customer');
 INSERT INTO ConcertStatuses(Status) VALUES ('Upcoming'), ('Cancelled'), ('Finished');
 INSERT INTO TicketStatuses(Status) VALUES ('Available'), ('Reserved'), ('Paid'), ('Cancelled');
-
+*/
 
 /* FILL TABLES WITH DUMMY DATAS */
+/*
 INSERT INTO Venues (Name, Location, Type, Capacity) VALUES
 	('Budapest Arena',					'Budapest, Hungary',		'Stadium',						12000),	--ID 1
 	('Müpa Budapest',					'Budapest, Hungary',		'Concert Hall',					1700),	--ID 2
@@ -542,6 +544,32 @@ INSERT INTO Concerts (ImageUrl, ConcertName, Description, Date, VenueID, MainArt
 		1,	-- Solo Show
 		1	-- Upcoming
 	);
+*/
+
+/* CONFIGURATIONS */
+/*
+	MAIN SERVER CONFIGURATION
+*/
+-- SET RECOVERY MODEL
+--ALTER DATABASE ConcertTicketingDB SET RECOVERY FULL;
+
+-- CHECK ACCESS
+--EXEC sp_configure 'show advanced options', 1;
+--RECONFIGURE;
+--EXEC sp_configure 'xp_cmdshell', 1;
+--RECONFIGURE;
+--EXEC sp_configure 'show advanced options', 0;
+--RECONFIGURE;
+--EXEC xp_cmdshell 'dir \\DESKTOP-3I9NATQ\BackupShare\Full\';
+
+-- INIT FULL BACKUP
+--BACKUP DATABASE ConcertTicketingDB TO DISK='\\DESKTOP-3I9NATQ\BackupShare\Full\CTDB_full.bak' WITH INIT;
+
+-- CREATE DIFFERENTIAL SAVE
+--BACKUP DATABASE ConcertTicketingDB TO DISK='\\DESKTOP-3I9NATQ\BackupShare\Diff\CTDB_diff.bak' WITH DIFFERENTIAL, INIT;
+
+
+
 
 
 /* DROP NONCLUSTERED INDICES */
