@@ -75,6 +75,7 @@ namespace ConcertTicketing.Server.Controllers
                 VenueName = concert.Venue.Name,
                 VenueLocation = concert.Venue.Location,
                 MainArtistName = concert.MainArtist.ArtistName,
+                MainArtistId = concert.MainArtist.Id,
                 Artists = allArtists,
                 Genres = allGenres
             };
@@ -82,6 +83,62 @@ namespace ConcertTicketing.Server.Controllers
             return Ok(eventDetails);
         }
 
+        // PUT: api/events
+        [HttpPut("{eventId}")]
+        public async Task<ActionResult<EventDetails>> UpdateEvent(int eventId, [FromBody] EventDetails updatedEvent)
+        {
+            var concert = await _context.Concerts
+                .Include(c => c.Venue)
+                .Include(c => c.MainArtist)
+                .Where(c => c.Id == eventId)
+                .FirstOrDefaultAsync();
+
+            if (concert == null)
+            {
+                return NotFound($"Concert with ID {eventId} not found.");
+            }
+
+            concert.ConcertName = updatedEvent.ConcertName;
+            concert.Description = updatedEvent.Description;
+            concert.Date = updatedEvent.Date;
+            concert.Venue.Name = updatedEvent.VenueName;
+            concert.Venue.Location = updatedEvent.VenueLocation;
+            concert.MainArtistId = updatedEvent.MainArtistId;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+            var updatedConcert = new EventDetails
+            {
+                ID = concert.Id,
+                ConcertName = concert.ConcertName,
+                Description = concert.Description,
+                Date = concert.Date,
+                ImageUrl = concert.ImageUrl,
+                VenueName = concert.Venue.Name,
+                VenueLocation = concert.Venue.Location,
+                MainArtistName = concert.MainArtist.ArtistName,
+                MainArtistId = concert.MainArtist.Id,
+                Artists = concert.ArtistRolesAtConcerts
+                            .Select(arac => arac.Artist.ArtistName)
+                            .Distinct()
+                            .ToList(),
+                Genres = concert.ArtistRolesAtConcerts
+                            .SelectMany(arac => arac.Artist.Genres)
+                            .Concat(concert.MainArtist.Genres)
+                            .Select(g => g.GenreName)
+                            .Distinct()
+                            .ToList()
+            };
+
+            return Ok(updatedConcert);
+        }
     }
 
     public class EventDetails
@@ -93,7 +150,8 @@ namespace ConcertTicketing.Server.Controllers
         public string? ImageUrl { get; set; }
         public string VenueName { get; set; } = null!;
         public string VenueLocation { get; set; } = null!;
-        public string MainArtistName { get; set; } = null!;
+        public string MainArtistName { get; set; }
+        public long MainArtistId { get; set; }
         public List<string> Artists { get; set; } = [];
         public List<string> Genres { get; set; } = [];
     }

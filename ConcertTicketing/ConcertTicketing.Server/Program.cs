@@ -26,11 +26,15 @@ namespace ConcertTicketing.Server
 
             // Support CORS (cross-origin requests)
             var AllowClientOrigins = "AllowClientOrigins";
+            var AllowAllOrigins = "AllowAllOrigins";
 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: AllowClientOrigins,
                     policy => policy.WithOrigins("https://localhost:54053").AllowAnyHeader().AllowAnyMethod()
+                );
+                options.AddPolicy(name: AllowAllOrigins,
+                    policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
                 );
             });
 
@@ -40,6 +44,8 @@ namespace ConcertTicketing.Server
 
             // Enable CORS
             app.UseCors(AllowClientOrigins);
+            app.UseRouting();
+            app.UseAuthorization();
 
             // Enable static files and default files
             app.UseDefaultFiles();
@@ -47,8 +53,6 @@ namespace ConcertTicketing.Server
 
             // Configure the HTTP request pipeline.
             app.UseHttpsRedirection();
-
-            app.UseAuthorization();
 
             // Map API controllers
             app.MapControllers();

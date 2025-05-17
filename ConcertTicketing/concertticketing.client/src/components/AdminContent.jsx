@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { DOMAIN } from './Utils';
 import CreateConcert from './CreateConcert';
+import AddArtist from './AddArtist';
+import AddTickets from './AddTickets';
 
 function Widget({ title, value }) {
     return (
@@ -32,6 +34,8 @@ export default function AdminContent() {
         incomeMonth: 0
     });
     const [showCreateConcert, setShowCreateConcert] = useState(false);
+    const [showAddArtist, setShowAddArtist] = useState(false);
+    const [showAddTickets, setShowAddTickets] = useState(false);
 
     useEffect(() => {
         async function fetchStats() {
@@ -57,6 +61,14 @@ export default function AdminContent() {
 
     if (showCreateConcert) {
         return <CreateConcert goBack={() => setShowCreateConcert(false)} />;
+    }
+
+    if (showAddArtist) {
+        return <AddArtist goBack={() => setShowAddArtist(false)} />;
+    }
+
+    if (showAddTickets) {
+        return <AddTickets goBack={() => setShowAddTickets(false)} />;
     }
 
     return (
@@ -91,7 +103,7 @@ export default function AdminContent() {
                     <ActionCard
                         title="Add artist"
                         description="Add a new artist and assign genres."
-                        onClick={() => alert("Navigate to artist creation page.")}
+                        onClick={() => setShowAddArtist(true)}
                     />
                     <ActionCard
                         title="Edit artist"
@@ -101,7 +113,7 @@ export default function AdminContent() {
                     <ActionCard
                         title="Add tickets"
                         description="Generate single or multiple tickets for an event."
-                        onClick={() => alert("Navigate to ticket management page.")}
+                        onClick={() => setShowAddTickets(true)}
                     />
                 </div>
             </section>
@@ -109,7 +121,7 @@ export default function AdminContent() {
             <section className="dashboard-section user-management">
                 <h3>Users</h3>
                 <hr />
-                {/* Felhasználók listája + admin mûveletek */}
+                {/* List of users + admin operations */}
             </section>
         </div>
     );

@@ -6,6 +6,7 @@ import UpcomingEvents from './components/UpcomingEvents';
 import Concerts from './components/Concerts';
 import EventDetails from './components/EventDetails';
 import Profile from './components/Profile';
+import EditEvent from './components/EditEvent';
 import './css/App.css';
 import './css/AuthForm.css';
 import './css/ProfileDropdown.css';
@@ -18,6 +19,7 @@ function App() {
     const [userData, setUserData] = useState(null);
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [editEvent, setEditEvent] = useState(null);
     const profileRef = useRef(null);
 
     useEffect(() => {
@@ -119,8 +121,10 @@ function App() {
                     <SignUp onSwitch={() => setAuthView('signin')} />
                 ) : authView === 'profile' ? (
                     <Profile />
+                ) : editEvent ? (
+                    <EditEvent eventData={editEvent} goBack={() => setEditEvent(null)} />
                 ) : selectedEvent ? (
-                    <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+                    <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} isAdmin={userData?.roleName === 'Admin'} onEdit={() => setEditEvent(selectedEvent)} />
                 ) : authView === 'admin' ? (
                     <AdminContent />
                 ) : (

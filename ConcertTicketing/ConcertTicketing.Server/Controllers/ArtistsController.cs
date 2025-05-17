@@ -22,7 +22,11 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Artist>>> GetArtists()
         {
-            return await _context.Artists.ToListAsync();
+            var artists = await _context.Artists
+            .Select(a => new { a.Id, a.ArtistName })
+            .ToListAsync();
+
+            return Ok(artists);
         }
 
         // GET: api/Artists/5

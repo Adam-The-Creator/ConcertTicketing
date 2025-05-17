@@ -1,0 +1,44 @@
+.profile-container {
+    padding: 2rem;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.ticket-table th,
+.ticket-table td {
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ticket-table th {
+    background-color: #2c2c2c;
+    color: #fff;
+    font-weight: 600;
+}
+
+/*.ticket-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}*/
+
+.ticket-table tbody tr:hover {
+    background-color: #4c5c6c;
+}
+
+@media (max-width: 768px) {
+    .ticket-table th,
+    .ticket-table td {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+}
