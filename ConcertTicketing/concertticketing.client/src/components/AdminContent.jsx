@@ -4,6 +4,8 @@ import { DOMAIN } from './Utils';
 import CreateConcert from './CreateConcert';
 import AddArtist from './AddArtist';
 import AddTickets from './AddTickets';
+import EditArtist from './EditArtist';
+import AddGenre from './AddGenre';
 
 function Widget({ title, value }) {
     return (
@@ -36,6 +38,8 @@ export default function AdminContent() {
     const [showCreateConcert, setShowCreateConcert] = useState(false);
     const [showAddArtist, setShowAddArtist] = useState(false);
     const [showAddTickets, setShowAddTickets] = useState(false);
+    const [showEditArtist, setShowEditArtist] = useState(false);
+    const [showAddGenre, setShowAddGenre] = useState(false);
 
     useEffect(() => {
         async function fetchStats() {
@@ -71,6 +75,14 @@ export default function AdminContent() {
         return <AddTickets goBack={() => setShowAddTickets(false)} />;
     }
 
+    if (showEditArtist) {
+        return <EditArtist goBack={() => setShowEditArtist(false)} />;
+    }
+
+    if (showAddGenre) {
+        return <AddGenre goBack={() => setShowAddGenre(false)} />;
+    }
+
     return (
         <div className="admin-dashboard">
             <h2>Admin Dashboard</h2>
@@ -96,22 +108,22 @@ export default function AdminContent() {
                         onClick={() => setShowCreateConcert(true)}
                     />
                     <ActionCard
-                        title="Edit concert"
-                        description="Update artists, venue, status and other concert details."
-                        onClick={() => alert("Navigate to concert editing page.")}
-                    />
-                    <ActionCard
-                        title="Add artist"
+                        title="Add new artist"
                         description="Add a new artist and assign genres."
                         onClick={() => setShowAddArtist(true)}
                     />
                     <ActionCard
                         title="Edit artist"
                         description="Update genre or edit artist information."
-                        onClick={() => alert("Navigate to artist editing page.")}
+                        onClick={() => setShowEditArtist(true)}
                     />
                     <ActionCard
-                        title="Add tickets"
+                        title="Add new genre"
+                        description="Add new genre."
+                        onClick={() => setShowAddGenre(true)}
+                    />
+                    <ActionCard
+                        title="Add new tickets"
                         description="Generate single or multiple tickets for an event."
                         onClick={() => setShowAddTickets(true)}
                     />

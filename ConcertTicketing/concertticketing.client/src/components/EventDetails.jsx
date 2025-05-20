@@ -61,6 +61,8 @@ function EventDetails({ event, onBack, isAdmin, onEdit }) {
     }
 
     const soldOut = availableTickets === 0;
+    var allGenres = details.genres.join(", ");
+    var otherPerformers = details.artists.filter(a => a != details.mainArtistName);
 
 
     return (
@@ -99,9 +101,9 @@ function EventDetails({ event, onBack, isAdmin, onEdit }) {
                 <p><strong>Date:</strong> {new Date(details.date).toLocaleString()}</p>
                 <p><strong>Venue:</strong> {details.venueName} - {details.venueLocation}</p>
                 <p><strong>Performers:</strong> <strong>{details.mainArtistName}</strong>
-                    {details.artists && details.artists.length > 0 ? ", " + details.artists.join(", ") : ""}
+                    {otherPerformers && otherPerformers.length > 0 ? ", " + otherPerformers.join(", ") : ""}
                 </p>
-                <p><strong>Genres:</strong> {details.genres.join(", ")}</p>
+                <p><strong>Genres:</strong> { allGenres.length === 0 ? "unknown" : allGenres }</p>
             </div>
         </div>
     );

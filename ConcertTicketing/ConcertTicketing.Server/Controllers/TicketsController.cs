@@ -11,15 +11,22 @@ namespace ConcertTicketing.Server.Controllers
     [ApiController]
     public class TicketsController : ControllerBase
     {
-        private readonly ConcertTicketingDBContext _context;
+        private readonly ILoadBalancedConcertTicketingDBContextFactory_Read _readDBContextFactory;
+        private readonly ConcertTicketingDBContext_Write _writeDBContext;
 
-        public TicketsController(ConcertTicketingDBContext context) => _context = context;
+        public TicketsController(ILoadBalancedConcertTicketingDBContextFactory_Read readContext, ConcertTicketingDBContext_Write writeContext)
+        {
+            _readDBContextFactory = readContext;
+            _writeDBContext = writeContext;
+        }
 
         // GET: api/tickets/available/5
         [HttpGet("available/{concertId:long}")]
         public async Task<ActionResult<int>> GetAvailableTickets(long concertId)
         {
-            var availableStatus = await _context.TicketStatuses
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var availableStatus = await _readDBContext.TicketStatuses
                 .Where(ts => ts.Status == "Available")
                 .Select(ts => ts.Id)
                 .FirstOrDefaultAsync();
@@ -29,7 +36,7 @@ namespace ConcertTicketing.Server.Controllers
                 return NotFound("Available status not found.");
             }
 
-            var count = await _context.Tickets
+            var count = await _readDBContext.Tickets
                 .Where(t => t.ConcertId == concertId && (t.PurchaseDate == null || t.TicketStatusId == availableStatus))
                 .CountAsync();
 
@@ -40,7 +47,9 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("price/{concertId:long}")]
         public async Task<ActionResult<decimal>> GetTicketPrice(long concertId)
         {
-            var availableStatusId = await _context.TicketStatuses
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var availableStatusId = await _readDBContext.TicketStatuses
                 .Where(ts => ts.Status == "Available")
                 .Select(ts => ts.Id)
                 .FirstOrDefaultAsync();
@@ -48,7 +57,7 @@ namespace ConcertTicketing.Server.Controllers
             if (availableStatusId == 0)
                 return NotFound("Available status not found.");
 
-            var ticket = await _context.Tickets
+            var ticket = await _readDBContext.Tickets
                 .Where(t => t.ConcertId == concertId && t.TicketStatusId == availableStatusId)
                 .Include(t => t.TicketDetail)
                 .FirstOrDefaultAsync();
@@ -64,11 +73,11 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateTickets([FromBody] TicketGenerationRequest request)
         {
-            var concert = await _context.Concerts.FindAsync(request.ConcertId);
+            var concert = await _writeDBContext.Concerts.FindAsync(request.ConcertId);
             if (concert == null)
                 return NotFound("Concert not found.");
 
-            var availableStatus = await _context.TicketStatuses
+            var availableStatus = await _writeDBContext.TicketStatuses
                 .Where(ts => ts.Status == "Available")
                 .Select(ts => ts.Id)
                 .FirstOrDefaultAsync();
@@ -78,16 +87,18 @@ namespace ConcertTicketing.Server.Controllers
 
             var detail = new TicketDetail
             {
-                Description = $"Concert: {concert.ConcertName} - Date: {concert.Date:yyyy-MM-dd}",
-                Price = 0,
-                StartDate = concert.Date,
-                EndDate = concert.Date,
-                Area = "",
+                Description = string.IsNullOrWhiteSpace(request.Description)
+                    ? $"Concert: {concert.ConcertName} - Date: {concert.Date:yyyy-MM-dd}"
+                    : request.Description,
+                Price = request.Price ?? 0,
+                StartDate = request.StartDate ?? concert.Date,
+                EndDate = request.EndDate ?? concert.Date,
+                Area = request.Area ?? "",
                 ConcertId = concert.Id
             };
 
-            _context.TicketDetails.Add(detail);
-            await _context.SaveChangesAsync();
+            _writeDBContext.TicketDetails.Add(detail);
+            await _writeDBContext.SaveChangesAsync();
 
             var tickets = new List<Ticket>();
             for (int i = 0; i < request.NumberOfTickets; i++)
@@ -98,20 +109,27 @@ namespace ConcertTicketing.Server.Controllers
                     SerialNumber = Guid.NewGuid().ToString(),
                     ConcertId = concert.Id,
                     TicketStatusId = availableStatus,
-                    TicketDetailId = detail.Id
+                    TicketDetailId = detail.Id,
+                    Seat = request.Seat
                 });
             }
 
-            _context.Tickets.AddRange(tickets);
-            await _context.SaveChangesAsync();
+            _writeDBContext.Tickets.AddRange(tickets);
+            await _writeDBContext.SaveChangesAsync();
 
             return Ok(new { message = $"{request.NumberOfTickets} tickets created." });
         }
-    }
 
-    public class TicketGenerationRequest
-    {
-        public long ConcertId { get; set; }
-        public int NumberOfTickets { get; set; }
+        public class TicketGenerationRequest
+        {
+            public long ConcertId { get; set; }
+            public int NumberOfTickets { get; set; }
+            public string? Description { get; set; }
+            public decimal? Price { get; set; }
+            public DateTime? StartDate { get; set; }
+            public DateTime? EndDate { get; set; }
+            public string? Area { get; set; }
+            public string? Seat { get; set; }
+        }
     }
 }

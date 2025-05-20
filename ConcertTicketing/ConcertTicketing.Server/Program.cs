@@ -14,10 +14,18 @@ namespace ConcertTicketing.Server
             // Add authorization services.
             builder.Services.AddAuthorization();
 
-            // Add DB context with SQL Server.
-            builder.Services.AddDbContext<ConcertTicketingDBContext>(options =>
+            // Add Write DB context with SQL Server connection.
+            builder.Services.AddDbContext<ConcertTicketingDBContext_Write>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("MainSQLServerConnection"))
             );
+
+            // Add Read DB context with SQL Server connection.
+            //builder.Services.AddDbContext<ConcertTicketingDBContext_Read>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("SecondarySQLServerConnection"))
+            //);
+
+            // Registrate the Factory for multiple Load Balanced Read DB contexts with SQL Server connections.
+            builder.Services.AddScoped<ILoadBalancedConcertTicketingDBContextFactory_Read, LoadBalancedConcertTicketingDBContextFactory_Read>();
 
             // Add controllers
             builder.Services.AddControllers();

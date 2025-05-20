@@ -15,9 +15,14 @@ namespace ConcertTicketing.Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly ConcertTicketingDBContext _context;
+        private readonly ILoadBalancedConcertTicketingDBContextFactory_Read _readDBContextFactory;
+        private readonly ConcertTicketingDBContext_Write _writeDBContext;
 
-        public AuthController(ConcertTicketingDBContext context) => _context = context;
+        public AuthController(ILoadBalancedConcertTicketingDBContextFactory_Read readContext, ConcertTicketingDBContext_Write writeContext)
+        {
+            _readDBContextFactory = readContext;
+            _writeDBContext = writeContext;
+        }
 
         [HttpPost("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupRequest signupRequest)
@@ -26,13 +31,13 @@ namespace ConcertTicketing.Server.Controllers
             if (string.IsNullOrWhiteSpace(signupRequest.Email)) return BadRequest("Email is required.");
             if (string.IsNullOrWhiteSpace(signupRequest.Password)) return BadRequest("Password is required.");
 
-            if (await _context.Users.AnyAsync(u => u.Email == signupRequest.Email))
+            if (await _writeDBContext.Users.AnyAsync(u => u.Email == signupRequest.Email))
             {
                 return Conflict("E-mail already exists.");
             }
 
             var hashedPassword = HashPassword(signupRequest.Password);
-            var userRole = await _context.UserRoles.FirstOrDefaultAsync(r => r.RoleName == "Customer");
+            var userRole = await _writeDBContext.UserRoles.FirstOrDefaultAsync(r => r.RoleName == "Customer");
             if (userRole == null) return StatusCode(500, "User role 'Customer' not configured.");
 
             var password = new Password
@@ -52,9 +57,9 @@ namespace ConcertTicketing.Server.Controllers
                 UserRoleId = userRole.Id
             };
 
-            _context.Passwords.Add(password);
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            _writeDBContext.Passwords.Add(password);
+            _writeDBContext.Users.Add(user);
+            await _writeDBContext.SaveChangesAsync();
 
             return Ok(new { user.Id, user.Username, user.Email, user.UserRole.RoleName });
         }
@@ -65,7 +70,7 @@ namespace ConcertTicketing.Server.Controllers
             if (string.IsNullOrWhiteSpace(signinRequest.Email)) return BadRequest("Email is required.");
             if (string.IsNullOrWhiteSpace(signinRequest.Password)) return BadRequest("Password is required.");
 
-            var user = await _context.Users.Include(u => u.Password).Include(u => u.UserRole).FirstOrDefaultAsync(u => u.Email == signinRequest.Email);
+            var user = await _writeDBContext.Users.Include(u => u.Password).Include(u => u.UserRole).FirstOrDefaultAsync(u => u.Email == signinRequest.Email);
 
             if (user == null || user.Password == null)
             {
@@ -75,12 +80,10 @@ namespace ConcertTicketing.Server.Controllers
             if (!VerifyPassword(signinRequest.Password, user.Password.HashedPassword.TrimEnd())) return Unauthorized("Invalid credentials.");
 
             user.SignedIn = DateTime.Now;
-            await _context.SaveChangesAsync();
+            await _writeDBContext.SaveChangesAsync();
 
             return Ok(new { user.Id, user.Username, user.Email, user.UserRole.RoleName });
         }
-
-
 
         public static string GenerateSalt()
         {

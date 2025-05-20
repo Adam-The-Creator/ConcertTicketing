@@ -10,7 +10,7 @@
 }
 
 .action-card {
-    background-color: #f9fafb;
+    background-color: rgba(29, 29, 29, 0.85);
     border: 1px solid #e5e7eb;
     border-radius: 1rem;
     padding: 1.5rem;
@@ -20,7 +20,7 @@
 }
 
 .action-card:hover {
-    background-color: #fff;
+    background-color: rgba(70, 70, 70, 0.85);
     border-color: #cbd5e1;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -28,13 +28,13 @@
 .action-card h4 {
     margin: 0 0 0.5rem;
     font-size: 1.1rem;
-    color: #111827;
+    color: white;
 }
 
 .action-card p {
     margin: 0;
     font-size: 0.95rem;
-    color: #4b5563;
+    color: #616c7d;
 }
 
 .dashboard-section {

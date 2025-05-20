@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcertTicketing.Server.Data.Context;
 
-public partial class ConcertTicketingDBContext : DbContext
+public partial class ConcertTicketingDBContext_Write : DbContext
 {
-    public ConcertTicketingDBContext() {}
+    public ConcertTicketingDBContext_Write() {}
 
-    public ConcertTicketingDBContext(DbContextOptions<ConcertTicketingDBContext> options) : base(options) {}
+    public ConcertTicketingDBContext_Write(DbContextOptions<ConcertTicketingDBContext_Write> options) : base(options) {}
 
     public virtual DbSet<Artist> Artists { get; set; }
 

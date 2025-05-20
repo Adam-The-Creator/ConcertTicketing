@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DOMAIN } from './Utils';
+import '../css/CreateConcert.css';
 
 export default function CreateConcert({ goBack }) {
     const [formData, setFormData] = useState({
@@ -9,8 +10,17 @@ export default function CreateConcert({ goBack }) {
         date: '',
         venueName: '',
         venueLocation: '',
+        imageUrl: '',
         status: 'Upcoming',
+        mainArtistId: '',
     });
+    const [artists, setArtists] = useState([]);
+
+    useEffect(() => {
+        axios.get(`${DOMAIN}/api/artists`)
+            .then(res => setArtists(res.data))
+            .catch(err => console.error("Failed to fetch artists:", err));
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,6 +52,21 @@ export default function CreateConcert({ goBack }) {
                     <textarea name="description" value={formData.description} onChange={handleChange} />
                 </label>
                 <label>
+                    Main Artist*
+                    <select name="mainArtistId" value={formData.mainArtistId} onChange={handleChange} required>
+                        <option value="">-- Select an Artist --</option>
+                        {artists.map(artist => (
+                            <option key={artist.id} value={artist.id}>
+                                {artist.artistName}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <label>
+                    Concert Image URL
+                    <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} />
+                </label>
+                <label>
                     Date*
                     <input type="datetime-local" name="date" value={formData.date} onChange={handleChange} required />
                 </label>
@@ -62,8 +87,10 @@ export default function CreateConcert({ goBack }) {
                     </select>
                 </label>
 
-                <button type="submit">Create Concert</button>
-                <button type="button" onClick={goBack} style={{ marginLeft: '1rem' }}>Cancel</button>
+                <div className="form-buttons">
+                    <button type="submit">Create Concert</button>
+                    <button type="button" onClick={goBack}>Cancel</button>
+                </div>
             </form>
         </div>
     );

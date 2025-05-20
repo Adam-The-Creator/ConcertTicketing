@@ -11,15 +11,22 @@ namespace ConcertTicketing.Server.Controllers
     [ApiController]
     public class StatsController : ControllerBase
     {
-        private readonly ConcertTicketingDBContext _context;
+        private readonly ILoadBalancedConcertTicketingDBContextFactory_Read _readDBContextFactory;
+        private readonly ConcertTicketingDBContext_Write _writeDBContext;
 
-        public StatsController(ConcertTicketingDBContext context) => _context = context;
+        public StatsController(ILoadBalancedConcertTicketingDBContextFactory_Read readContext, ConcertTicketingDBContext_Write writeContext)
+        {
+            _readDBContextFactory = readContext;
+            _writeDBContext = writeContext;
+        }
 
         // GET: /api/stats/events/count
         [HttpGet("events/count")]
         public async Task<IActionResult> GetEventCount()
         {
-            var count = await _context.Concerts.CountAsync();
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var count = await _readDBContext.Concerts.CountAsync();
             return Ok(new { count });
         }
 
@@ -27,7 +34,9 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("tickets/sold")]
         public async Task<IActionResult> GetTotalTicketsSold()
         {
-            var total = await _context.Tickets
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var total = await _readDBContext.Tickets
                 .Include(t => t.TicketStatus)
                 .CountAsync(t => t.TicketStatus!.Status == "Paid");
 
@@ -38,8 +47,10 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("tickets/sold/today")]
         public async Task<IActionResult> GetTicketsSoldToday()
         {
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
             var today = DateTime.Today;
-            var count = await _context.Tickets
+            var count = await _readDBContext.Tickets
                 .Include(t => t.TicketStatus)
                 .CountAsync(t =>
                     t.TicketStatus!.Status == "Paid" &&
@@ -53,8 +64,10 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("income/monthly")]
         public async Task<IActionResult> GetMonthlyIncome()
         {
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
             var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            var income = await _context.Tickets
+            var income = await _readDBContext.Tickets
                 .Include(t => t.TicketStatus)
                 .Where(t =>
                     t.TicketStatus!.Status == "Paid" &&

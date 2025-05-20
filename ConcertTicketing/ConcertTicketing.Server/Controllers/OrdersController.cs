@@ -11,26 +11,31 @@ namespace ConcertTicketing.Server.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        private readonly ConcertTicketingDBContext _context;
+        private readonly ILoadBalancedConcertTicketingDBContextFactory_Read _readDBContextFactory;
+        private readonly ConcertTicketingDBContext_Write _writeDBContext;
 
-        public OrdersController(ConcertTicketingDBContext context) => _context = context;
+        public OrdersController(ILoadBalancedConcertTicketingDBContextFactory_Read readContext, ConcertTicketingDBContext_Write writeContext)
+        {
+            _readDBContextFactory = readContext;
+            _writeDBContext = writeContext;
+        }
 
         [HttpPost("purchase")]
         public async Task<IActionResult> PurchaseTickets([FromBody] BuyTicketsRequest request)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _writeDBContext.Database.BeginTransactionAsync();
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
+                var user = await _writeDBContext.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
                 if (user == null) return NotFound("User not found.");
 
-                var availableStatusId = await _context.TicketStatuses.Where(ts => ts.Status == "Available").Select(ts => ts.Id).FirstOrDefaultAsync();
+                var availableStatusId = await _writeDBContext.TicketStatuses.Where(ts => ts.Status == "Available").Select(ts => ts.Id).FirstOrDefaultAsync();
 
                 if (availableStatusId == 0) return NotFound("Available status not found.");
 
-                var reservedStatusId = await _context.TicketStatuses.Where(ts => ts.Status == "Reserved").Select(ts => ts.Id).FirstOrDefaultAsync();
+                var reservedStatusId = await _writeDBContext.TicketStatuses.Where(ts => ts.Status == "Reserved").Select(ts => ts.Id).FirstOrDefaultAsync();
 
-                var tickets = await _context.Tickets.Where(t => t.ConcertId == request.ConcertId && t.TicketStatusId == availableStatusId).Take(request.Quantity).ToListAsync();
+                var tickets = await _writeDBContext.Tickets.Where(t => t.ConcertId == request.ConcertId && t.TicketStatusId == availableStatusId).Take(request.Quantity).ToListAsync();
 
                 if (tickets.Count < request.Quantity) return BadRequest("Not enough available tickets.");
 
@@ -38,10 +43,10 @@ namespace ConcertTicketing.Server.Controllers
                 {
                     ticket.TicketStatusId = reservedStatusId;
                 }
-                await _context.SaveChangesAsync();
+                await _writeDBContext.SaveChangesAsync();
 
                 var ticketDetailId = tickets.First().TicketDetailId;
-                var pricePerTicket = await _context.TicketDetails.Where(td => td.Id == ticketDetailId).Select(td => td.Price).FirstOrDefaultAsync();
+                var pricePerTicket = await _writeDBContext.TicketDetails.Where(td => td.Id == ticketDetailId).Select(td => td.Price).FirstOrDefaultAsync();
 
                 var expectedTotal = pricePerTicket * tickets.Count;
                 if (expectedTotal != request.TotalPrice)
@@ -50,7 +55,7 @@ namespace ConcertTicketing.Server.Controllers
                     {
                         ticket.TicketStatusId = availableStatusId;
                     }
-                    await _context.SaveChangesAsync();
+                    await _writeDBContext.SaveChangesAsync();
                     return BadRequest("Invalid total price.");
                 }
 
@@ -70,19 +75,19 @@ namespace ConcertTicketing.Server.Controllers
                     DeliveryEmail = user.Email
                 };
 
-                _context.Orders.Add(order);
+                _writeDBContext.Orders.Add(order);
 
                 foreach (var ticket in tickets)
                 {
-                    _context.OrderTickets.Add(new OrderTicket
+                    _writeDBContext.OrderTickets.Add(new OrderTicket
                     {
                         OrderId = order.Id,
                         TicketId = ticket.Id
                     });
                 }
-                await _context.SaveChangesAsync();
+                await _writeDBContext.SaveChangesAsync();
 
-                var paidStatusId = await _context.TicketStatuses.Where(ts => ts.Status == "Paid").Select(ts => ts.Id).FirstOrDefaultAsync();
+                var paidStatusId = await _writeDBContext.TicketStatuses.Where(ts => ts.Status == "Paid").Select(ts => ts.Id).FirstOrDefaultAsync();
 
                 if (paidStatusId == 0)
                 {
@@ -90,7 +95,7 @@ namespace ConcertTicketing.Server.Controllers
                     {
                         ticket.TicketStatusId = availableStatusId;
                     }
-                    await _context.SaveChangesAsync();
+                    await _writeDBContext.SaveChangesAsync();
                     return NotFound("Paid status not found.");
                 }
 
@@ -99,7 +104,7 @@ namespace ConcertTicketing.Server.Controllers
                     ticket.TicketStatusId = paidStatusId;
                     ticket.PurchaseDate = purchaseTime;
                 }
-                await _context.SaveChangesAsync();
+                await _writeDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
 
@@ -115,7 +120,9 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("mytickets/{userId}")]
         public async Task<IActionResult> GetUserTickets(Guid userId)
         {
-            var tickets = await _context.OrderTickets
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var tickets = await _readDBContext.OrderTickets
                 .Where(ot => ot.Order.UserId == userId)
                 .Include(ot => ot.Ticket)
                 .ThenInclude(t => t.Concert)
@@ -134,8 +141,6 @@ namespace ConcertTicketing.Server.Controllers
                 .ToListAsync();
             return Ok(tickets);
         }
-
-
     }
 
     public class BuyTicketsRequest

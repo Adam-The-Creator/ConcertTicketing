@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DOMAIN } from './Utils';
+import "../css/CreateConcert.css"
 
 export default function EditEvent({ eventData, goBack }) {
     const [formData, setFormData] = useState(null);
@@ -25,6 +26,7 @@ export default function EditEvent({ eventData, goBack }) {
                     venueLocation: data.venueLocation || '',
                     status: data.status || 'Upcoming',
                     mainArtistId: data.mainArtistId || '',
+                    imageUrl: data.imageUrl || '',
                 });
 
                 console.log("mainArtistId from API:", data.mainArtistId);
@@ -89,12 +91,16 @@ export default function EditEvent({ eventData, goBack }) {
 
 
     return (
-        <div className="create-concert">
+        <div className="edit-concert">
             <h2>Edit Concert</h2>
             <form onSubmit={handleSubmit} className="concert-form">
                 <label>
                     Concert Name*
                     <input type="text" name="concertName" value={formData.concertName} onChange={handleChange} required />
+                </label>
+                <label>
+                    Description
+                    <textarea name="description" value={formData.description} onChange={handleChange} />
                 </label>
                 <label>
                     Main Artist*
@@ -108,8 +114,8 @@ export default function EditEvent({ eventData, goBack }) {
                     </select>
                 </label>
                 <label>
-                    Description
-                    <textarea name="description" value={formData.description} onChange={handleChange} />
+                    Concert Image URL
+                    <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} />
                 </label>
                 <label>
                     Date*
@@ -132,8 +138,10 @@ export default function EditEvent({ eventData, goBack }) {
                     </select>
                 </label>
 
-                <button type="submit">Save Changes</button>
-                <button type="button" onClick={goBack} style={{ marginLeft: '1rem' }}>Cancel</button>
+                <div className="form-buttons">
+                    <button type="submit">Update Concert</button>
+                    <button type="button" onClick={goBack}>Cancel</button>
+                </div>
             </form>
         </div>
     );

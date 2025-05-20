@@ -82,7 +82,7 @@ function App() {
                             setAuthView('admin');
                             setSelectedEvent(null);
                         }}>
-                            Admin Page
+                            Dashboard
                         </div>
                     )}
                     <div className="nav-button" onClick={() => {

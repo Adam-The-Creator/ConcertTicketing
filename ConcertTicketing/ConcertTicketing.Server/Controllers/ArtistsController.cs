@@ -14,15 +14,21 @@ namespace ConcertTicketing.Server.Controllers
     [ApiController]
     public class ArtistsController : ControllerBase
     {
-        private readonly ConcertTicketingDBContext _context;
+        private readonly ILoadBalancedConcertTicketingDBContextFactory_Read _readDBContextFactory;
+        private readonly ConcertTicketingDBContext_Write _writeDBContext;
 
-        public ArtistsController(ConcertTicketingDBContext context) => _context = context;
+        public ArtistsController(ILoadBalancedConcertTicketingDBContextFactory_Read readContext, ConcertTicketingDBContext_Write writeContext) {
+            _readDBContextFactory = readContext;
+            _writeDBContext = writeContext;
+        }
 
         // GET: api/Artists
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Artist>>> GetArtists()
         {
-            var artists = await _context.Artists
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var artists = await _readDBContext.Artists
             .Select(a => new { a.Id, a.ArtistName })
             .ToListAsync();
 
@@ -33,7 +39,9 @@ namespace ConcertTicketing.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Artist>> GetArtist(long id)
         {
-            var artist = await _context.Artists.FindAsync(id);
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var artist = await _readDBContext.Artists.FindAsync(id);
 
             if (artist == null)
             {
@@ -41,6 +49,24 @@ namespace ConcertTicketing.Server.Controllers
             }
 
             return artist;
+        }
+
+        // GET: api/artists/{id}/genres
+        [HttpGet("{id}/genres")]
+        public async Task<ActionResult<IEnumerable<GenresOfArtistDTO>>> GetArtistGenres(long id)
+        {
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+
+            var artist = await _readDBContext.Artists
+                .Include(a => a.Genres)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (artist == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(artist.Genres.Select(g => g.Id).ToList());
         }
 
         // PUT: api/Artists/5
@@ -53,11 +79,11 @@ namespace ConcertTicketing.Server.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(artist).State = EntityState.Modified;
+            _writeDBContext.Entry(artist).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _writeDBContext.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -74,13 +100,42 @@ namespace ConcertTicketing.Server.Controllers
             return NoContent();
         }
 
+        // PUT: api/artists/{id}/genres
+        [HttpPut("{id}/genres")]
+        public async Task<IActionResult> UpdateArtistGenres(long id, GenreUpdateDto genresUpdateDTO)
+        {
+            if (genresUpdateDTO.GenreIds == null) return BadRequest();
+
+            var artist = await _writeDBContext.Artists
+                .Include(a => a.Genres)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (artist == null)
+            {
+                return NotFound();
+            }
+
+            var newGenres = await _writeDBContext.Genres
+                .Where(g => genresUpdateDTO.GenreIds.Contains(g.Id))
+                .ToListAsync();
+
+            artist.Genres.Clear();
+            foreach (var genre in newGenres)
+            {
+                artist.Genres.Add(genre);
+            }
+
+            await _writeDBContext.SaveChangesAsync();
+            return NoContent();
+        }
+
         // POST: api/Artists
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Artist>> PostArtist(Artist artist)
         {
-            _context.Artists.Add(artist);
-            await _context.SaveChangesAsync();
+            _writeDBContext.Artists.Add(artist);
+            await _writeDBContext.SaveChangesAsync();
 
             return CreatedAtAction("GetArtist", new { id = artist.Id }, artist);
         }
@@ -89,21 +144,33 @@ namespace ConcertTicketing.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteArtist(long id)
         {
-            var artist = await _context.Artists.FindAsync(id);
+            var artist = await _writeDBContext.Artists.FindAsync(id);
             if (artist == null)
             {
                 return NotFound();
             }
 
-            _context.Artists.Remove(artist);
-            await _context.SaveChangesAsync();
+            _writeDBContext.Artists.Remove(artist);
+            await _writeDBContext.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool ArtistExists(long id)
         {
-            return _context.Artists.Any(e => e.Id == id);
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+            return _readDBContext.Artists.Any(e => e.Id == id);
         }
+    }
+
+    public class GenreUpdateDto
+    {
+        public List<int>? GenreIds { get; set; } = null;
+    }
+
+    public class GenresOfArtistDTO
+    {
+        public List<int>? GenreIds { get; set; } = null;
+        public List<string>? GenreNames { get; set; } = null;
     }
 }
