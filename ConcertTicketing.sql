@@ -17,20 +17,24 @@
 		DESKTOP-3I9NATQ\MAIN		192.168.63.129:1500		HOST-IP:11500		PORT FORWARDING
 		DESKTOP-3I9NATQ\SECONDARY	192.168.63.129:1501		HOST-IP:11501		PORT FORWARDING
 		DESKTOP-3I9NATQ\LOG			192.168.63.129:1502		HOST-IP:11502		PORT FORWARDING
-		DESKTOP-3I9NATQ\SECONDARY	192.168.63.129:1503		HOST-IP:11503		PORT FORWARDING
+		DESKTOP-3I9NATQ\SECONDARY2	192.168.63.129:1503		HOST-IP:11503		PORT FORWARDING
 
 	MAIN SERVER ROLES:
-		Provides RW access to the API.
-		Tramsactional Replication between MAIN-SECONDARY via DIST.
+		Provides W access to the API.
+		Tramsactional Replication between MAIN->[SECONDARY, SECONDARY2] via DIST.
+		Provides Transaction Logs to LOG via Log Shipping to support Disaster Recovery.
 
-	SECONDARY SERVER ROLES:
+	SECONDARY, SECONDARY2 SERVERS ROLES:
 		Provides R access to the API.
-		Transactional Replication between MAIN-SECONDARY via DIST.
+		Transactional Replication between MAIN->[SECONDARY, SECONDARY2] via DIST.
 
 	LOG SERVER ROLES:
 		It receives backup and log datas.
-		Replication between MAIN-LOG.
-		Replication between SECONDARY-LOG.
+		Disaster Recovery.
+
+	DIST SERVER ROLES:
+		Monitoring activity.
+		Distributor of the Transactional Replications betveen MAIN->[SECONDARY, SECONDARY2].
 */
 
 
