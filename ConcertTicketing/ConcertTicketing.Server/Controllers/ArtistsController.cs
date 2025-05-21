@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ConcertTicketing.Server.Data.Context;
 using ConcertTicketing.Server.Models;
+using System.Data;
 
 namespace ConcertTicketing.Server.Controllers
 {
@@ -125,7 +126,21 @@ namespace ConcertTicketing.Server.Controllers
                 artist.Genres.Add(genre);
             }
 
-            await _writeDBContext.SaveChangesAsync();
+            try
+            {
+                await _writeDBContext.SaveChangesAsync();
+            }
+            catch (DBConcurrencyException)
+            {
+                if (!ArtistExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
             return NoContent();
         }
 

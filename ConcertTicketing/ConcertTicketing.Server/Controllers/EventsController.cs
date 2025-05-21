@@ -2,6 +2,7 @@
 using ConcertTicketing.Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -118,57 +119,87 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPut("{eventId}")]
         public async Task<ActionResult<EventDetails>> UpdateEvent(int eventId, [FromBody] EventDetails updatedEvent)
         {
-            var concert = await _writeDBContext.Concerts
+            if (updatedEvent.Date <= DateTime.Today) return BadRequest("The date cannot be earlier or today.");
+
+            using var transaction = await _writeDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                var concert = await _writeDBContext.Concerts
                 .Include(c => c.Venue)
                 .Include(c => c.MainArtist)
                 .Where(c => c.Id == eventId)
                 .FirstOrDefaultAsync();
 
-            if (concert == null)
-            {
-                return NotFound($"Concert with ID {eventId} not found.");
+                if (concert == null)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound($"Concert with ID {eventId} not found.");
+                }
+
+                concert.ConcertName = updatedEvent.ConcertName;
+                concert.Description = updatedEvent.Description;
+                concert.Date = updatedEvent.Date;
+                concert.Venue.Name = updatedEvent.VenueName;
+                concert.Venue.Location = updatedEvent.VenueLocation;
+                concert.MainArtistId = updatedEvent.MainArtistId;
+
+                try
+                {
+                    await _writeDBContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                }
+
+                var updatedConcert = new EventDetails
+                {
+                    ID = concert.Id,
+                    ConcertName = concert.ConcertName,
+                    Description = concert.Description,
+                    Date = concert.Date,
+                    ImageUrl = concert.ImageUrl,
+                    VenueName = concert.Venue.Name,
+                    VenueLocation = concert.Venue.Location,
+                    MainArtistName = concert.MainArtist?.ArtistName,
+                    MainArtistId = concert.MainArtist.Id,
+                    Artists = concert.ArtistRolesAtConcerts
+                                .Select(arac => arac.Artist.ArtistName)
+                                .Distinct()
+                                .ToList(),
+                    Genres = concert.ArtistRolesAtConcerts
+                                .SelectMany(arac => arac.Artist.Genres)
+                                .Concat(concert.MainArtist.Genres)
+                                .Select(g => g.GenreName)
+                                .Distinct()
+                                .ToList()
+                };
+
+                return Ok(updatedConcert);
             }
-
-            concert.ConcertName = updatedEvent.ConcertName;
-            concert.Description = updatedEvent.Description;
-            concert.Date = updatedEvent.Date;
-            concert.Venue.Name = updatedEvent.VenueName;
-            concert.Venue.Location = updatedEvent.VenueLocation;
-            concert.MainArtistId = updatedEvent.MainArtistId;
-
-            try
+            catch (DBConcurrencyException)
             {
-                await _writeDBContext.SaveChangesAsync();
+                if (!EventExists(eventId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                await transaction.RollbackAsync();
+                throw;
             }
+        }
 
-            var updatedConcert = new EventDetails
-            {
-                ID = concert.Id,
-                ConcertName = concert.ConcertName,
-                Description = concert.Description,
-                Date = concert.Date,
-                ImageUrl = concert.ImageUrl,
-                VenueName = concert.Venue.Name,
-                VenueLocation = concert.Venue.Location,
-                MainArtistName = concert.MainArtist?.ArtistName,
-                MainArtistId = concert.MainArtist.Id,
-                Artists = concert.ArtistRolesAtConcerts
-                            .Select(arac => arac.Artist.ArtistName)
-                            .Distinct()
-                            .ToList(),
-                Genres = concert.ArtistRolesAtConcerts
-                            .SelectMany(arac => arac.Artist.Genres)
-                            .Concat(concert.MainArtist.Genres)
-                            .Select(g => g.GenreName)
-                            .Distinct()
-                            .ToList()
-            };
-
-            return Ok(updatedConcert);
+        private bool EventExists(long id)
+        {
+            using var _readDBContext = _readDBContextFactory.CreateContext();
+            return _readDBContext.Concerts.Any(e => e.Id == id);
         }
     }
 

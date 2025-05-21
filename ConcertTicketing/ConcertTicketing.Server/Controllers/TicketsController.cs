@@ -73,51 +73,74 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateTickets([FromBody] TicketGenerationRequest request)
         {
-            var concert = await _writeDBContext.Concerts.FindAsync(request.ConcertId);
-            if (concert == null)
-                return NotFound("Concert not found.");
+            if (request.StartDate > request.EndDate) return BadRequest("Start date cannot be greater than end date.");
 
-            var availableStatus = await _writeDBContext.TicketStatuses
-                .Where(ts => ts.Status == "Available")
-                .Select(ts => ts.Id)
-                .FirstOrDefaultAsync();
-
-            if (availableStatus == 0)
-                return NotFound("Available status not found.");
-
-            var detail = new TicketDetail
+            using var transaction = await _writeDBContext.Database.BeginTransactionAsync();
+            try
             {
-                Description = string.IsNullOrWhiteSpace(request.Description)
-                    ? $"Concert: {concert.ConcertName} - Date: {concert.Date:yyyy-MM-dd}"
-                    : request.Description,
-                Price = request.Price ?? 0,
-                StartDate = request.StartDate ?? concert.Date,
-                EndDate = request.EndDate ?? concert.Date,
-                Area = request.Area ?? "",
-                ConcertId = concert.Id
-            };
-
-            _writeDBContext.TicketDetails.Add(detail);
-            await _writeDBContext.SaveChangesAsync();
-
-            var tickets = new List<Ticket>();
-            for (int i = 0; i < request.NumberOfTickets; i++)
-            {
-                tickets.Add(new Ticket
+                var concert = await _writeDBContext.Concerts.FindAsync(request.ConcertId);
+                if (concert == null)
                 {
-                    Id = Guid.NewGuid(),
-                    SerialNumber = Guid.NewGuid().ToString(),
-                    ConcertId = concert.Id,
-                    TicketStatusId = availableStatus,
-                    TicketDetailId = detail.Id,
-                    Seat = request.Seat
-                });
+                    await transaction.RollbackAsync();
+                    return NotFound("Concert not found.");
+                }
+
+                if (request.StartDate < concert.Date)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest("Start date cannot be smaller than the date of concert.");
+                }
+
+                var availableStatus = await _writeDBContext.TicketStatuses
+                    .Where(ts => ts.Status == "Available")
+                    .Select(ts => ts.Id)
+                    .FirstOrDefaultAsync();
+
+                if (availableStatus == 0)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound("Available status not found.");
+                }
+
+                var detail = new TicketDetail
+                {
+                    Description = string.IsNullOrWhiteSpace(request.Description)
+                        ? $"Concert: {concert.ConcertName} - Date: {concert.Date:yyyy-MM-dd}"
+                        : request.Description,
+                    Price = request.Price ?? 0,
+                    StartDate = request.StartDate ?? concert.Date,
+                    EndDate = request.EndDate ?? concert.Date,
+                    Area = request.Area ?? "",
+                    ConcertId = concert.Id
+                };
+
+                _writeDBContext.TicketDetails.Add(detail);
+                await _writeDBContext.SaveChangesAsync();
+
+                var tickets = new List<Ticket>();
+                for (int i = 0; i < request.NumberOfTickets; i++)
+                {
+                    tickets.Add(new Ticket
+                    {
+                        Id = Guid.NewGuid(),
+                        SerialNumber = Guid.NewGuid().ToString(),
+                        ConcertId = concert.Id,
+                        TicketStatusId = availableStatus,
+                        TicketDetailId = detail.Id,
+                        Seat = request.Seat
+                    });
+                }
+
+                _writeDBContext.Tickets.AddRange(tickets);
+                await _writeDBContext.SaveChangesAsync();
+
+                return Ok(new { message = $"{request.NumberOfTickets} tickets created." });
             }
-
-            _writeDBContext.Tickets.AddRange(tickets);
-            await _writeDBContext.SaveChangesAsync();
-
-            return Ok(new { message = $"{request.NumberOfTickets} tickets created." });
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public class TicketGenerationRequest

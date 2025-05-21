@@ -130,7 +130,7 @@ function App() {
                 ) : (
                     <>
                         <UpcomingEvents onSelectEvent={setSelectedEvent} />
-                        <Concerts />
+                        {/*<Concerts />*/}
                     </>
                 )}
             </main>

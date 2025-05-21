@@ -27,17 +27,29 @@ namespace ConcertTicketing.Server.Controllers
             try
             {
                 var user = await _writeDBContext.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
-                if (user == null) return NotFound("User not found.");
+                if (user == null)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound("User not found.");
+                }
 
                 var availableStatusId = await _writeDBContext.TicketStatuses.Where(ts => ts.Status == "Available").Select(ts => ts.Id).FirstOrDefaultAsync();
 
-                if (availableStatusId == 0) return NotFound("Available status not found.");
+                if (availableStatusId == 0)
+                {
+                    await transaction.RollbackAsync();
+                    return NotFound("Available status not found.");
+                }
 
                 var reservedStatusId = await _writeDBContext.TicketStatuses.Where(ts => ts.Status == "Reserved").Select(ts => ts.Id).FirstOrDefaultAsync();
 
                 var tickets = await _writeDBContext.Tickets.Where(t => t.ConcertId == request.ConcertId && t.TicketStatusId == availableStatusId).Take(request.Quantity).ToListAsync();
 
-                if (tickets.Count < request.Quantity) return BadRequest("Not enough available tickets.");
+                if (tickets.Count < request.Quantity)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest("Not enough available tickets.");
+                }
 
                 foreach (var ticket in tickets)
                 {
@@ -56,6 +68,7 @@ namespace ConcertTicketing.Server.Controllers
                         ticket.TicketStatusId = availableStatusId;
                     }
                     await _writeDBContext.SaveChangesAsync();
+                    await transaction.RollbackAsync();
                     return BadRequest("Invalid total price.");
                 }
 
@@ -96,6 +109,7 @@ namespace ConcertTicketing.Server.Controllers
                         ticket.TicketStatusId = availableStatusId;
                     }
                     await _writeDBContext.SaveChangesAsync();
+                    await transaction.RollbackAsync();
                     return NotFound("Paid status not found.");
                 }
 

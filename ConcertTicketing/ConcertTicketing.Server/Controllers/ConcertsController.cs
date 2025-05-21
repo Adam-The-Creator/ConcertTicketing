@@ -24,72 +24,82 @@ namespace ConcertTicketing.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateConcert([FromBody] CreateConcertDto concertDTO)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (concertDTO.Date <= DateTime.Today) return BadRequest("The date cannot be earlier or today.");
 
-            var venue = await _writeDBContext.Venues.FirstOrDefaultAsync(v => v.Name == concertDTO.VenueName && v.Location == concertDTO.VenueLocation);
-
-            if (venue == null)
+            using var transaction = await _writeDBContext.Database.BeginTransactionAsync();
+            try
             {
-                venue = new Venue
+                var venue = await _writeDBContext.Venues.FirstOrDefaultAsync(v => v.Name == concertDTO.VenueName && v.Location == concertDTO.VenueLocation);
+
+                if (venue == null)
                 {
-                    Name = concertDTO.VenueName,
-                    Location = concertDTO.VenueLocation
-                };
-                _writeDBContext.Venues.Add(venue);
-                await _writeDBContext.SaveChangesAsync();
-            }
+                    venue = new Venue
+                    {
+                        Name = concertDTO.VenueName,
+                        Location = concertDTO.VenueLocation
+                    };
+                    _writeDBContext.Venues.Add(venue);
+                    await _writeDBContext.SaveChangesAsync();
+                }
 
-            var status = await _writeDBContext.ConcertStatuses.FirstOrDefaultAsync(s => s.Status == concertDTO.Status);
+                var status = await _writeDBContext.ConcertStatuses.FirstOrDefaultAsync(s => s.Status == concertDTO.Status);
 
-            if (status == null)
-            {
-                return BadRequest($"Invalid status value: {concertDTO.Status}");
-            }
-
-            var mainArtist = await _writeDBContext.Artists.FindAsync(concertDTO.MainArtistId);
-
-            var concert = new Concert
-            {
-                ConcertName = concertDTO.ConcertName,
-                Description = concertDTO.Description,
-                MainArtist = mainArtist,
-                MainArtistId = mainArtist?.Id,
-                ImageUrl = concertDTO.ImageUrl,
-                Date = concertDTO.Date,
-                VenueId = venue.Id,
-                StatusId = status.Id
-            };
-
-            _writeDBContext.Concerts.Add(concert);
-            await _writeDBContext.SaveChangesAsync();
-
-            ArtistRole? mainArtistRole = await _writeDBContext.ArtistRoles.FirstOrDefaultAsync(r => r.RoleName == "Main Artist");
-
-            if (mainArtistRole == null)
-            {
-                mainArtistRole = new ArtistRole
+                if (status == null)
                 {
-                    RoleName = "Main Artist"
-                };
-                _writeDBContext.ArtistRoles.Add(mainArtistRole);
-                await _writeDBContext.SaveChangesAsync();
-            }
+                    await transaction.RollbackAsync();
+                    return BadRequest($"Invalid status value: {concertDTO.Status}");
+                }
 
-            if (mainArtist != null)
-            {
-                var artistRoleAtConcert = new ArtistRolesAtConcert
+                var mainArtist = await _writeDBContext.Artists.FindAsync(concertDTO.MainArtistId);
+
+                var concert = new Concert
                 {
-                    ConcertId = concert.Id,
-                    ArtistId = mainArtist.Id,
-                    RoleId = mainArtistRole.Id
+                    ConcertName = concertDTO.ConcertName,
+                    Description = concertDTO.Description,
+                    MainArtist = mainArtist,
+                    MainArtistId = mainArtist?.Id,
+                    ImageUrl = concertDTO.ImageUrl,
+                    Date = concertDTO.Date,
+                    VenueId = venue.Id,
+                    StatusId = status.Id
                 };
 
-                _writeDBContext.ArtistRolesAtConcerts.Add(artistRoleAtConcert);
+                _writeDBContext.Concerts.Add(concert);
                 await _writeDBContext.SaveChangesAsync();
-            }
 
-            return Ok(new { concert.Id });
+                ArtistRole? mainArtistRole = await _writeDBContext.ArtistRoles.FirstOrDefaultAsync(r => r.RoleName == "Main Artist");
+
+                if (mainArtistRole == null)
+                {
+                    mainArtistRole = new ArtistRole
+                    {
+                        RoleName = "Main Artist"
+                    };
+                    _writeDBContext.ArtistRoles.Add(mainArtistRole);
+                    await _writeDBContext.SaveChangesAsync();
+                }
+
+                if (mainArtist != null)
+                {
+                    var artistRoleAtConcert = new ArtistRolesAtConcert
+                    {
+                        ConcertId = concert.Id,
+                        ArtistId = mainArtist.Id,
+                        RoleId = mainArtistRole.Id
+                    };
+
+                    _writeDBContext.ArtistRolesAtConcerts.Add(artistRoleAtConcert);
+                    await _writeDBContext.SaveChangesAsync();
+                }
+
+                return Ok(new { concert.Id });
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 
